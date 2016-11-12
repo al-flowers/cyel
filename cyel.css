@@ -1,23 +1,72 @@
+html {
+    min-height: 100%;
+    position: relative;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+}
+
+div.main_container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+}
+
+div.main_container:hover {
+    cursor: default;
+}
+
 div.main {
     height: 720px;
-    width: 720px;
+    width: 1280px;
     margin: auto;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
 .board {
-    border: 1px solid #000000;
+    border: 1px solid #ff0000;
+    position: absolute;
 }
 
+/* Menu */
 div.title {
     font-family: "Courier New", Courier, monospace;
-    height: 720px;
-    width: 720px;
-    top: 250px;
-    margin: auto;
     text-align: center;
-    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 80px;
+    padding-top: 50px;
     z-index: 2;
+}
+
+div.menu {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+div.menu_item {
+    font-family: "Courier New", Courier, monospace;
+    color: #CCCCCC;
+    padding: 3px 10px;
+    margin-top: 7px;
+    margin-bottom: 7px;
+    text-align: center;
+    opacity: inherit;
+    border-radius: 15px;
 }
