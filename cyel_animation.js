@@ -1,6 +1,8 @@
 dimension_x = 1280;
 dimension_y = 720;
 
+
+
 // dynamic and persistent DOM objects
 var title;
 var menu;
@@ -9,8 +11,10 @@ var menu;
 $(function() {
     console.log('dimension_x: ' + dimension_x);
     entrance_init();
-    //TODO: perform the appropriate animations (and data manipulation) according to the user's actions
+    //TODO: perform the appropriate animations (and data manipulation) according to the user's actions. IMPORTANCE: high
 });
+
+
 
 /******************************
  * WEBSITE ENTRANCE ANIMATION *
@@ -73,8 +77,7 @@ function entrance_draw() {
     }
 }
 
-// fade in title and main menu (w/ animations?)
-//TODO: probably make a title object since it may actually be useful in the future...idk
+// TODO: consider implementing text div object (maybe not necessary... we'll see)
 function load_title() {
     title = document.createElement('div');
     title.id = 'title';
@@ -94,47 +97,36 @@ function load_title() {
 
 // fade in title menu with full functionality and associated animations
 function load_menu() {
-    menu = new Menu(['continue', 'new game', 'leaderboard', 'settings']);
-    menu.changeAvailability('continue', false);
-    menu.changeAvailability('leaderboard', false);
-    menu.changeAvailability('settings', false);
+    // TODO: consider creating menu items before creating the menu object
+    var main_continue = new MenuItem('continue', false, null);
+    var main_new_game = new MenuItem('new game', true, start_game_init);
+    var main_leaderboard = new MenuItem('leaderboard', false, null);
+    var main_settings = new MenuItem('settings', false, null);
+    menu = new Menu('Main', [main_continue, main_new_game, main_leaderboard, main_settings]);
     menu.display();
-
-    // Set the animations that play throughout the menu menu selection
-    $(function() {
-        menu.item_objects.forEach(function(item) {
-            var avail = menu.getAvailability(item.innerHTML);
-            if (avail) {
-                $('#' + item.id).hover(function() {
-                    $('#' + item.id).animate({
-                        color: "#000000"
-                    }, 100);
-                },
-                function() {
-                    $('#' + item.id).animate({
-                        color: "#CCCCCC"
-                    }, 100);
-                });
-            }
-        });
-    });
 
     return;
 }
 
+
+
 /************************
  * GAME START ANIMATION *
  ************************/
-//TODO: (current idea) fade out menu items and condense menu object to become the center of the board
+//IDEA: Fade out menu items and condense menu object to become the center of the board
 function start_game_init() {
-
+    console.log('new game started');
+    //IDEA: fade out all other options except for what was selected and drift it to the
+    //      to the center before minimizing the diamond.
 }
 
 function start_game_draw() {
 
 }
 
+
+
 /***********************
  * GAMEPLAY ANIMATIONS *
  ***********************/
-//TODO: falling units, clockwise/counter-clockwise shift, removing units,
+//TODO: falling units, clockwise/counter-clockwise shift, removing units, IMPORTANCE: high

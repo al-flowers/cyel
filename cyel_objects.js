@@ -21,6 +21,7 @@ Field.prototype.traverse = function() {
 };
 
 
+
 /*******************
  * INDIVIDUAL UNIT *
  *******************/
@@ -33,6 +34,7 @@ var Unit = function(color, type, location, status) {
 };
 
 
+
 /*****************
  * PAIR OF UNITS *
  *****************/
@@ -42,25 +44,59 @@ var Pair = function(units) {
 };
 
 
+
+/*************
+ * MENU_ITEM *
+ *************/
+var MenuItem = function(name, avail, action) {
+    this.name = name;
+    this.availability = avail;
+    this.action = action;
+    // NOTE: there is also a div attribute
+}
+
+MenuItem.prototype.createDiv = function(group) {
+    this.div = document.createElement('div');
+    this.div.id = group + '_' + this.name.replace(/ /g, '_');
+    this.div.className = 'menu_item';
+    this.div.innerHTML = this.name;
+    // if a menu item is selectable then add the appropriate functionality and hover animation
+    if (this.availability) {
+        $(this.div).hover(function() {
+            $(this).animate({
+                color: "#000000"
+            }, 100);
+        },
+        function() {
+            $(this).animate({
+                color: "#CCCCCC"
+            }, 100);
+        });
+
+        var action = this.action;
+        $(this.div).click(function() {
+            action();
+        });
+    }
+}
+
+// TODO: consider implementing private variables using the 'underscore'vtechnique
+//         mentioned at: https://philipwalton.com/articles/implementing-private-and-protected-members-in-javascript/
+
+
+
 /********
  * MENU *
  ********/
-var Menu = function(list) {
-    this.items = list;
-    this.item_objects = [];
-    this.amount = list.length;
-    this.availability = []
-    // create the div for each menu item and store it in the item_objects array
-    for (i = 0; i < this.amount; i++) {
-        var new_menu_item = document.createElement('div');
-        new_menu_item.id = 'menu_item' + i;
-        new_menu_item.className = 'menu_item';
-        new_menu_item.innerHTML = this.items[i];
+var Menu = function(group, items) {
+    this.menu_name = group;
+    this.menu_items = items;
+    this.amount = items.length;
 
-        this.item_objects = this.item_objects.concat(new_menu_item);
-
-        this.availability[i] = true;
-    }
+    // create all of the menu items to be stored in the menu_items array
+    this.menu_items.forEach(function(item) {
+        item.createDiv('main');
+    });
 };
 
 // display the menu object
@@ -73,11 +109,11 @@ Menu.prototype.display = function() {
     menu_div.style.opacity = 0.0;
 
     // add each menu item
-    for (i = 0; i < this.amount; i++) {
+    this.menu_items.forEach(function(item) {
+        menu_div.appendChild(item.div);
+        console.log('    ' + item.div.id);
 
-        menu_div.appendChild(this.item_objects[i]);
-        console.log('    ' + this.items[i]);
-    }
+    });
     document.getElementById('main_div').appendChild(menu_div);
     // fade in the menu items
     $(function() {
@@ -86,23 +122,3 @@ Menu.prototype.display = function() {
         }, 500);
     });
 };
-
-// change the availability of a menu item
-Menu.prototype.changeAvailability = function(item, value) {
-    var index = this.items.indexOf(item);
-    this.availability[index] = value;
-    if (value) {
-        this.item_objects[index].style.color = '#000000';
-    } else {
-        this.item_objects[index].style.color = '#CCCCCC';
-    }
-
-    console.log('Availability of ' + item + ' is now ' + value);
-}
-
-// get the availability of a menu item
-Menu.prototype.getAvailability = function(item) {
-    var index = this.items.indexOf(item);
-    var avail = this.availability[index];
-    return avail;
-}
