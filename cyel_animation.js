@@ -35,6 +35,7 @@ function entrance_init() {
     m_object_margin = 40;
     ani_progress = 0;
     ani_goal = dimension_y/2 - m_object_margin;
+    // TODO: use velocity and accleration properly....eventually
     velocity = 0.6;
     acceleration = 1.05;
 
@@ -83,13 +84,11 @@ function load_title() {
     title.id = 'title';
     title.className = 'title';
     title.innerHTML = 'c y e l';
-    title.style.opacity = 0.0;
+    title.style.display = 'none';
     document.getElementById('main_div').appendChild(title);
 
     $(function() {
-        $('#title').animate({
-            opacity: 1.0
-        }, 500);
+        $('#title').fadeIn(500);
     });
 
     load_menu();
@@ -113,11 +112,42 @@ function load_menu() {
 /************************
  * GAME START ANIMATION *
  ************************/
-//IDEA: Fade out menu items and condense menu object to become the center of the board
+// IDEA: Fade out menu items and condense menu object to become the center of the board
+// NOTE: this is on a road to messiness, but my current goal is results...should it not be? We'll find out.
 function start_game_init() {
-    console.log('new game started');
+    console.log("new game started");
     //IDEA: fade out all other options except for what was selected and drift it to the
     //      to the center before minimizing the diamond.
+    ng_text = document.getElementById("main_new_game");
+    $(ng_text).off('mouseenter mouseleave');
+    var current_position = $(ng_text).position();
+
+    menu.menu_items.forEach(function(item) {
+        if (item.availability === false) {
+            console.log(menu.menu_items.indexOf(item));
+            console.log(menu.amount - 1);
+            if (menu.menu_items.indexOf(item) === menu.amount - 1) {
+                $(item.div).fadeOut(500, function() {
+                    $("#title").fadeOut(500);
+                    // TODO: the title needs to fade after all of the menu items fade. As it is,
+                    //          the title is fading out at the same time as all of the menu items
+                });
+            } else {
+                $(item.div).fadeOut(500);
+            }
+        }
+    });
+
+    //$(ng_text).css('position', 'absolute');
+
+    // This will change once title becomes a floatingtext object
+    $("#title").fadeOut(500);
+
+    // $(ng_text).animate({
+    //     top: current_position.top
+    // }, 500);
+
+    alert("brb, learning bootstrap")
 }
 
 function start_game_draw() {

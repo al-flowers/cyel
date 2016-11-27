@@ -83,7 +83,7 @@ MenuItem.prototype.createDiv = function(group) {
 // TODO: consider implementing private variables using the 'underscore'vtechnique
 //         mentioned at: https://philipwalton.com/articles/implementing-private-and-protected-members-in-javascript/
 
-
+ 
 
 /********
  * MENU *
