@@ -9,7 +9,7 @@ var menu;
 
 //NOTE: this function will likely be moved to a different file (i.e. a main .js file)
 $(function() {
-    entrance_init2();
+    entrance_init();
     //TODO: perform the appropriate animations (and data manipulation) according to the user's actions. IMPORTANCE: high
 });
 
@@ -18,95 +18,22 @@ $(function() {
 /******************************
  * WEBSITE ENTRANCE ANIMATION *
  ******************************/
-
-// VERSION 1 (sorry pal, it looks like VERSION 2 will win this one. you're a mess. get your shit together.)
-// progress of the animation
 var draw;
 var velocity;
 var acceleration;
-var expand_progress;
-var expand_complete;
-var damage_progress;
-var damage_complete;
-
-// distance between the edges of the menu diamond object and the edges of the canvas
 var m_object_margin;
 var origin_x = dimension_x/2;
 var origin_y = dimension_y/2;
-
-// set up objects and values before the looping of the animation
-function entrance_init() {
-    m_object_margin = 40;
-    expand_complete = false;
-    expand_progress = 0;
-    expand_goal = origin_y - m_object_margin;
-    damage_complete = false;
-    damage_progress = 0.00;
-    velocity = 0.6;
-    acceleration = 1.08;
-    // TODO: use velocity and accleration properly....eventually
-
-    window.requestAnimationFrame(entrance_draw);
-    draw = document.getElementById("canvas").getContext("2d");
-    draw.globalCompositeOperation = 'source-over';
-}
-
-// recursively called until the animation is complete
-function entrance_draw() {
-    draw.clearRect(0, 0, dimension_x, dimension_y);
-
-    // make sure the object never grows larger than it should
-    if (expand_progress > expand_goal) {
-        expand_progress = expand_goal;
-        expand_complete = true;
-        damage_progress = 1.0;
-        load_title();
-    }
-    if (damage_progress < 0) {
-        damage_progress = 0;
-        damage_complete = true;
-    }
-    draw.save();
-    draw.translate(origin_x, origin_y);
-    draw.beginPath();
-    draw.moveTo(0, -(expand_progress));    //1
-    draw.lineTo(expand_progress, 0);       //2
-    draw.lineTo(0, expand_progress);       //3
-    draw.lineTo(-(expand_progress), 0);    //4
-    draw.lineTo(0, -(expand_progress));    //1
-    draw.lineWidth = 0.5;
-    draw.strokeStyle = "rgb(204, 204, 204)"; // rgb(204,204,204) is equivalent to #CCCCCC
-    draw.fillStyle = "rgba(240, 240, 240, " + damage_progress + ")";
-    draw.stroke();
-    draw.fill();
-    draw.closePath();
-    draw.restore();
-
-    // restart or end animation loop
-    if (expand_complete && damage_complete) {
-        console.log('Entrance animation complete.');
-        load_menu();
-    } else if (expand_complete) {
-        damage_progress -= 0.05;
-        window.requestAnimationFrame(entrance_draw);
-    } else {
-        velocity *= acceleration;
-        expand_progress += velocity;
-        window.requestAnimationFrame(entrance_draw);
-    }
-}
-
-
-// VERSION 2
-// extra variables utilized by VERSION 2
 var fill_opacity;
 var diamond_complete;
 var intro_ln_progress;
 var intro_ln_done;
 var cover_color;
 
+// TODO: Add ability to skip entrance animation by clicking and/or pressing a specific button
+
 // set up objects and values before the looping of the animation
-function entrance_init2() {
+function entrance_init() {
     m_object_margin = 40;
     diamond_complete = false;
     corner_x = origin_y - m_object_margin;
@@ -117,13 +44,13 @@ function entrance_init2() {
     cover_color = "#FFFFFF"; // TODO: This will ultimately be #FFFFFF
     fill_opacity = 0.0;
 
-    window.requestAnimationFrame(entrance_draw2);
+    window.requestAnimationFrame(entrance_draw);
     draw = document.getElementById("canvas").getContext("2d");
     draw.globalCompositeOperation = 'source-over';
 }
 
 // recursively called until the animation is complete
-function entrance_draw2() {
+function entrance_draw() {
     draw.clearRect(0, 0, dimension_x, dimension_y);
 
     draw.save();
@@ -262,7 +189,7 @@ function entrance_draw2() {
         load_title();
         load_menu();
     } else {
-        window.requestAnimationFrame(entrance_draw2);
+        window.requestAnimationFrame(entrance_draw);
     }
 }
 
