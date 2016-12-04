@@ -6,6 +6,7 @@ html {
 body {
     height: 100%;
     width: 100%;
+    font-size: 1.5em;
 }
 
 div.main_container {

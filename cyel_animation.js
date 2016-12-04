@@ -18,7 +18,9 @@ $(function() {
 /******************************
  * WEBSITE ENTRANCE ANIMATION *
  ******************************/
+ // variables for creating the diamond
 var draw;
+var length;
 var velocity;
 var acceleration;
 var m_object_margin;
@@ -30,14 +32,22 @@ var intro_ln_progress;
 var intro_ln_done;
 var cover_color;
 
+// variables for lifting the diamond
+var shadow_width;
+var progress;
+var end;
+var menu_loaded;
+
+var minimize_goal;
+var minimize_complete;
+
 // TODO: Add ability to skip entrance animation by clicking and/or pressing a specific button
 
 // set up objects and values before the looping of the animation
 function entrance_init() {
     m_object_margin = 40;
     diamond_complete = false;
-    corner_x = origin_y - m_object_margin;
-    corner_y = origin_y - m_object_margin;
+    length = origin_y - m_object_margin;
     intro_ln_progress = [227, 453, 227, 227, 227, 227, 227];
     intro_ln_done = [false, false, false, false, false, false];
 
@@ -56,11 +66,11 @@ function entrance_draw() {
     draw.save();
     draw.translate(origin_x, origin_y);
     draw.beginPath();
-    draw.moveTo(0, -(corner_y));    //1
-    draw.lineTo(corner_x, 0);       //2
-    draw.lineTo(0, corner_y);       //3
-    draw.lineTo(-(corner_x), 0);    //4
-    draw.lineTo(0, -(corner_y));    //1
+    draw.moveTo(0, -(length));    //1
+    draw.lineTo(length, 0);       //2
+    draw.lineTo(0, length);       //3
+    draw.lineTo(-(length), 0);    //4
+    draw.lineTo(0, -(length));    //1
     draw.lineWidth = 0.5;
     draw.strokeStyle = "rgb(128, 128, 128)"; // rgb(128,128,128) is equivalent to #808080
     draw.fillStyle = "rgba(128, 128, 128, " + fill_opacity + ")";
@@ -185,9 +195,7 @@ function entrance_draw() {
 
     // restart or end animation loop
     if (diamond_complete) {
-        console.log('Entrance animation complete.');
-        load_title();
-        load_menu();
+        window.requestAnimationFrame(lift_diamond_init);
     } else {
         window.requestAnimationFrame(entrance_draw);
     }
@@ -196,13 +204,129 @@ function entrance_draw() {
 // Adds an intensifying shadow to the main diamond object
 // TODO: Assimilate this function into the code better, likely through the use of OOP.
 //          Currently exists as an experiment.... Am I taking the animation too far? hmmm...
-// length: the maximum distance across the diamond object
-function lift_diamond(length) {
-    if (!draw.getContext()) {
-        console.error("lift_diamond cannot be called without a pre-existing canvas");
+// center: the point at the center of the diamond
+// length: the distance from the center of the diamond to a corner
+// TODO: fix overlap of shadows at corners (creates dark spikes at corners)
+function lift_diamond_init() {
+    shadow_width = 40;
+    fade_ratio = 0.1;
+    fade_change = 0.002;
+    progress = 0;
+    end = 100;
+    progress_change = 1;
+    menu_loaded = false;
+    window.requestAnimationFrame(lift_diamond);
+}
+
+function lift_diamond() {
+    draw.clearRect(0, 0, dimension_x, dimension_y);
+
+    if (progress >= end) {
+        progress = end;
     }
 
+    var shadow;
 
+    draw.save();
+    draw.translate(origin_x, origin_y);
+
+    // Quadrant I
+    shadow = draw.createLinearGradient(0, -(length), shadow_width, -(length + shadow_width));
+    shadow.addColorStop(0, "rgba(" + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + 0.7 + ")");
+    shadow.addColorStop(fade_ratio, "rgba(256, 256, 256, 0.2)");
+
+    draw.beginPath();
+    draw.moveTo(0, -(length));
+    draw.lineTo(0, -(length + shadow_width));
+    draw.lineTo(length + shadow_width, 0);
+    draw.lineTo(length, 0);
+    draw.lineTo(0, -(length));
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    // Quadrant II
+    shadow = draw.createLinearGradient(length, 0, length + shadow_width, shadow_width);
+    shadow.addColorStop(0, "rgba(" + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + 0.7 + ")");
+    shadow.addColorStop(fade_ratio, "rgba(256, 256, 256, 0.2)");
+
+    draw.beginPath();
+    draw.moveTo(length, 0);
+    draw.lineTo(length + shadow_width, 0);
+    draw.lineTo(0, length + shadow_width);
+    draw.lineTo(0, length);
+    draw.lineTo(length, 0);
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    // Quadrant III
+    shadow = draw.createLinearGradient(0, length, -(shadow_width), length + shadow_width);
+    shadow.addColorStop(0, "rgba(" + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + 0.7 + ")");
+    shadow.addColorStop(fade_ratio, "rgba(256, 256, 256, 0.2)");
+
+    draw.beginPath();
+    draw.moveTo(0, length);
+    draw.lineTo(0, length + shadow_width);
+    draw.lineTo(-(length + shadow_width), 0);
+    draw.lineTo(-(length), 0);
+    draw.lineTo(0, length);
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    // Quadrant IV
+    shadow = draw.createLinearGradient(-(length), 0, -(length + shadow_width), -(shadow_width));
+    shadow.addColorStop(0, "rgba(" + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + Math.floor(256 - progress) + ", " + 0.7 + ")");
+    shadow.addColorStop(fade_ratio, "rgba(256, 256, 256, 0.2)");
+
+    draw.beginPath();
+    draw.moveTo(-(length), 0);
+    draw.lineTo(-(length + shadow_width), 0);
+    draw.lineTo(0, -(length + shadow_width));
+    draw.lineTo(0, -(length));
+    draw.lineTo(-(length), 0);
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    draw.restore();
+
+    // draw diamond over the shadow
+    draw.save();
+    draw.translate(origin_x, origin_y);
+    draw.beginPath();
+    draw.moveTo(0, -(length));    //1
+    draw.lineTo(length, 0);       //2
+    draw.lineTo(0, length);       //3
+    draw.lineTo(-(length), 0);    //4
+    draw.lineTo(0, -(length));    //1
+    draw.lineWidth = 0.5;
+    draw.strokeStyle = "rgb(128, 128, 128)"; // rgb(128,128,128) is equivalent to #808080
+    draw.fillStyle = "rgba(128, 128, 128, " + fill_opacity + ")";
+    draw.stroke();
+    draw.fill();
+    draw.closePath();
+    draw.restore();
+
+    if (progress < end) {
+        if (!menu_loaded && progress > end/2) {
+            load_title();
+            load_menu();
+            menu_loaded = true;
+        }
+        progress += progress_change;
+        fade_ratio += fade_change; // TODO: find smooth way to make sure that fade_ratio never goes higher than 1.0
+        length += 0.1;
+        window.requestAnimationFrame(lift_diamond);
+    }
+    else {
+        return;
+    }
 }
 
 // TODO: consider implementing text div object (maybe not necessary... we'll see)
@@ -215,13 +339,12 @@ function load_title() {
     document.getElementById('main_div').appendChild(title);
 
     $(function() {
-        $('#title').fadeIn(500);
+        $('#title').fadeIn(1000);
     });
 }
 
 // fade in title menu with full functionality and associated animations
 function load_menu() {
-    // TODO: consider creating menu items before creating the menu object
     var main_continue = new MenuItem('continue', false, null);
     var main_new_game = new MenuItem('new game', true, start_game_init);
     var main_leaderboard = new MenuItem('leaderboard', false, null);
@@ -245,7 +368,8 @@ function start_game_init() {
     ng_text = document.getElementById("main_new_game");
     $(ng_text).off('mouseenter mouseleave');
     $(ng_text).animate({
-        color: "#808080"
+        color: "#808080",
+        opacity: "0.0"
     }, 2000);
     $("#title").animate({
         opacity: "0.0"
@@ -257,10 +381,45 @@ function start_game_init() {
             }, 400);
         }
     });
+
+    minimize_goal = 40;
+    minimize_complete = false;
+    window.requestAnimationFrame(start_game_draw);
 }
 
+// TODO: implement acceleration to the minimizing of the diamond
 function start_game_draw() {
+    draw.clearRect(0, 0, dimension_x, dimension_y);
 
+    console.log("length: " + length);
+
+    if (length < minimize_goal) {
+        length = minimize_goal;
+        minimize_complete = true;
+    }
+
+    // draw diamond
+    draw.save();
+    draw.translate(origin_x, origin_y);
+    draw.beginPath();
+    draw.moveTo(0, -(length));    //1
+    draw.lineTo(length, 0);       //2
+    draw.lineTo(0, length);       //3
+    draw.lineTo(-(length), 0);    //4
+    draw.lineTo(0, -(length));    //1
+    draw.lineWidth = 0.5;
+    draw.strokeStyle = "rgb(128, 128, 128)"; // rgb(128,128,128) is equivalent to #808080
+    draw.fillStyle = "rgba(128, 128, 128, " + fill_opacity + ")";
+    draw.stroke();
+    draw.fill();
+    draw.closePath();
+    draw.restore();
+
+    if (minimize_complete) {
+        return;
+    } else {
+        length -= 5;
+    }
 }
 
 
