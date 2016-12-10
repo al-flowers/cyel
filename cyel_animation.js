@@ -1,16 +1,18 @@
-dimension_x = 1280;
-dimension_y = 720;
+var dimension_x = 1280;
+var dimension_y = 720;
 
-
-
-// dynamic and persistent DOM objects
+// dynamic and persistent objects
 var title;
 var menu;
+var draw;
 
-//NOTE: this function will likely be moved to a different file (i.e. a main .js file)
 $(function() {
-    entrance_init();
-    //TODO: perform the appropriate animations (and data manipulation) according to the user's actions. IMPORTANCE: high
+    draw = document.getElementById("canvas").getContext("2d");
+    draw.globalCompositeOperation = 'source-over';
+    var title_diamond = new Diamond(640, 360, 320);
+    title_diamond.display();
+    title_diamond.change_elevation(40);
+
 });
 
 
@@ -19,7 +21,6 @@ $(function() {
  * WEBSITE ENTRANCE ANIMATION *
  ******************************/
  // variables for creating the diamond
-var draw;
 var length;
 var velocity;
 var acceleration;
