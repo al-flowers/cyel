@@ -53,6 +53,8 @@ var MenuItem = function(name, avail, action) {
     this.availability = avail;
     this.action = action;
     // NOTE: there is also a div attribute
+
+    console.log('New MenuItem created');
 }
 
 MenuItem.prototype.createDiv = function(group) {
@@ -97,28 +99,57 @@ var Menu = function(group, items) {
     this.menu_items.forEach(function(item) {
         item.createDiv('main');
     });
+
+    console.log('New Menu created');
 };
 
 // display the menu object
 Menu.prototype.display = function() {
-    console.log('menu being displayed:');
+    console.log('displaying menu...');
+
     // the menu div will hold all of the menu items
     var menu_div = document.createElement('div');
-    menu_div.id ='menu';
+
+    menu_div.id = 'menu_' + this.menu_name;
     menu_div.className = 'menu';
     menu_div.style.opacity = 0.0;
 
     // add each menu item
     this.menu_items.forEach(function(item) {
         menu_div.appendChild(item.div);
-        console.log('    ' + item.div.id);
 
     });
     document.getElementById('main_div').appendChild(menu_div);
     // fade in the menu items
-    $(function() {
-        $('#menu').animate({
-            opacity: 1.0
-        }, 1000);
-    });
+    $('#' + menu_div.id).animate({
+        opacity: 1.0
+    }, 1000);
+};
+
+
+
+/*********
+ * TITLE *
+ *********/
+var Title = function(id, title) {
+    this.title = title;
+    this.id = 'title_' + id;
+
+    this.div = document.createElement('div');
+    this.div.id = this.id;
+    this.div.className = 'title';
+    this.div.innerHTML = title;
+    this.div.style.opacity = 0.0;
+
+    console.log('New Title created');
+};
+
+Title.prototype.display = function() {
+    console.log('displaying title...');
+
+    document.getElementById('main_div').appendChild(this.div);
+
+    $('#' + this.id).animate({
+        opacity: 1.0
+    }, 1000);
 };

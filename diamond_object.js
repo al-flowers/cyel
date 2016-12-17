@@ -9,6 +9,7 @@ var Diamond = function(x_position, y_position, size) {
     this.fill = "rgb(256, 256, 256)";
     this.elevation = 0;
     this.visible = false;
+    this.content = [];
     console.log('New Diamond object created');
 };
 
@@ -51,28 +52,31 @@ Diamond.prototype.change_elevation = function(new_elevation) {
     }
 };
 
+Diamond.prototype.addContent = function(content_item) {
+    this.content.push(content_item);
+};
+
 // TODO: create a rotate function
 
 
 /***********************
  * ANIMATION FUNCTIONS *
  ***********************/
- // TODO: make these methods private
- // TODO: scale the appropriate values using the rate variable
+// TODO: make these methods private
+// TODO: maybe (just maybe) devise cleaner solution for scoping
+// IDEA: run code from init functions within the corresponding methods above and remove the init methods
+
 // Animate the 'Bleed' effect to display the Diamond
+// TODO: scale the appropriate values using the rate variable
 Diamond.prototype.ani_bleed_init = function(rate) {
     this.rate = rate;
     // WARNING: be careful of floating point values. they may break the fillRect function. We'll see though.
 
     this.diamond_complete = false;
-    console.log(this.size);
     this.edge = Math.ceil(this.size * Math.sqrt(2));
     this.half_edge = Math.ceil(this.edge/2);
     this.line_progress = [this.half_edge, this.edge, this.half_edge, this.half_edge, this.half_edge, this.half_edge, this.half_edge];
     this.line_complete = [false, false, false, false, false, false, false];
-
-    console.log('edge: ' + this.edge);
-    console.log('half_edge: ' + this.half_edge);
 
     this.cover_color = "#FFFFFF";
 
@@ -107,7 +111,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         }
     }
 
-    // Quadrant IV Right
+    // Quadrant IV (2/2)
     if (!this.line_complete[0]) {
         draw.save();
         draw.translate(this.origin_x - (this.size/2 + 2), this.origin_y - (this.size/2 + 2));
@@ -120,7 +124,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         this.line_progress[0] -= 4;
     }
 
-    // Quadrant I complete
+    // Quadrant I (1/1)
     if (!this.line_complete[1]) {
         draw.save();
         draw.translate(this.origin_x, this.origin_y - (this.size + 2));
@@ -135,7 +139,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         }
     }
 
-    // Quadrant II Left
+    // Quadrant II (1/2)
     if (!this.line_complete[2]) {
         draw.save();
         draw.translate(this.origin_x + (this.size + 2), this.origin_y);
@@ -150,7 +154,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         }
     }
 
-    // Quadrant II Right
+    // Quadrant II (2/2)
     if (!this.line_complete[3]) {
         draw.save();
         draw.translate(this.origin_x + (this.size/2 + 2), this.origin_y + (this.size/2 + 2));
@@ -163,7 +167,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         this.line_progress[3]--;
     }
 
-    // Quadrant III Left
+    // Quadrant III (1/2)
     if (!this.line_complete[4]) {
         draw.save();
         draw.translate(this.origin_x, this.origin_y + (this.size + 2));
@@ -176,7 +180,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         this.line_progress[4]--;
     }
 
-    // Quadrant III Right
+    // Quadrant III (2/2)
     if (!this.line_complete[5]) {
         draw.save();
         draw.translate(this.origin_x - (this.size/2 + 2), this.origin_y + (this.size/2 + 2));
@@ -191,7 +195,7 @@ Diamond.prototype.ani_bleed_draw = function() {
         }
     }
 
-    // Quadrant IV Left
+    // Quadrant IV (1/2)
     if (!this.line_complete[6]) {
         draw.save();
         draw.translate(this.origin_x - (this.size + 2), this.origin_y);
@@ -205,10 +209,144 @@ Diamond.prototype.ani_bleed_draw = function() {
     }
 
     if (this.diamond_complete) {
-        // window.requestAnimationFrame(ani_elevation_init);
+        // free variables that were only used by this one time animation
+        delete this.diamond_complete;
+        delete this.line_progress;
+        delete this.line_complete;
+        window.requestAnimationFrame(() => {this.ani_elevation_init()});
         return;
     } else {
         window.requestAnimationFrame(() => {this.ani_bleed_draw()});
+    }
+}
+
+// Animate change in elevation
+Diamond.prototype.ani_elevation_init = function() {
+    this.shadow_width = 40;
+    // TODO: find better names for fade_ratio and fade_change
+    this.fade_ratio = 0.1;
+    this.fade_change = 0.002;
+    this.lift_progress = 0;
+    this.lift_end = 100;
+    this.lift_rate = 1;
+    this.items_loaded = false;
+
+    this.shadow_transparency_begin = 0.7;
+    this.shadow_transparency_end = 0.2;
+    window.requestAnimationFrame(() => {this.ani_elevation_draw()});
+}
+
+Diamond.prototype.ani_elevation_draw = function() {
+    draw.clearRect(0, 0, dimension_x, dimension_y);
+
+    if (this.lift_progress >= this.lift_end) {
+        this.lift_progress = this.lift_end;
+    }
+
+    var shadow;
+    var shadow_level = Math.floor(256 - this.lift_progress);
+
+    draw.save();
+    draw.translate(this.origin_x, this.origin_y);
+
+    // Quadrant I
+    shadow = draw.createLinearGradient(0, -(this.size), this.shadow_width, -(this.size + this.shadow_width));
+    shadow.addColorStop(0, "rgba(" + shadow_level + ", " + shadow_level + ", " + shadow_level + ", " + this.shadow_transparency_begin + ")");
+    shadow.addColorStop(this.fade_ratio, "rgba(256, 256, 256, " + this.shadow_transparency_end + ")");
+
+    draw.beginPath();
+    draw.moveTo(0, -(this.size));
+    draw.lineTo(0, -(this.size + this.shadow_width));
+    draw.lineTo(this.size + this.shadow_width, 0);
+    draw.lineTo(this.size, 0);
+    draw.lineTo(0, -(this.size));
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    // Quadrant II
+    shadow = draw.createLinearGradient(this.size, 0, this.size + this.shadow_width, this.shadow_width);
+    shadow.addColorStop(0, "rgba(" + shadow_level + ", " + shadow_level + ", " + shadow_level + ", " + this.shadow_transparency_begin + ")");
+    shadow.addColorStop(this.fade_ratio, "rgba(256, 256, 256, " + this.shadow_transparency_end + ")");
+
+    draw.beginPath();
+    draw.moveTo(this.size, 0);
+    draw.lineTo(this.size + this.shadow_width, 0);
+    draw.lineTo(0, this.size + this.shadow_width);
+    draw.lineTo(0, this.size);
+    draw.lineTo(this.size, 0);
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    // Quadrant III
+    shadow = draw.createLinearGradient(0, this.size, -(this.shadow_width), this.size + this.shadow_width);
+    shadow.addColorStop(0, "rgba(" + shadow_level + ", " + shadow_level + ", " + shadow_level + ", " + this.shadow_transparency_begin + ")");
+    shadow.addColorStop(this.fade_ratio, "rgba(256, 256, 256, " + this.shadow_transparency_end + ")");
+
+    draw.beginPath();
+    draw.moveTo(0, this.size);
+    draw.lineTo(0, this.size + this.shadow_width);
+    draw.lineTo(-(this.size + this.shadow_width), 0);
+    draw.lineTo(-(this.size), 0);
+    draw.lineTo(0, this.size);
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    // Quadrant IV
+    shadow = draw.createLinearGradient(-(this.size), 0, -(this.size + this.shadow_width), -(this.shadow_width));
+    shadow.addColorStop(0, "rgba(" + shadow_level + ", " + shadow_level + ", " + shadow_level + ", " + this.shadow_transparency_begin + ")");
+    shadow.addColorStop(this.fade_ratio, "rgba(256, 256, 256, " + this.shadow_transparency_end + ")");
+
+    draw.beginPath();
+    draw.moveTo(-(this.size), 0);
+    draw.lineTo(-(this.size + this.shadow_width), 0);
+    draw.lineTo(0, -(this.size + this.shadow_width));
+    draw.lineTo(0, -(this.size));
+    draw.lineTo(-(this.size), 0);
+    draw.lineWidth = 0.0;
+    draw.fillStyle = shadow;
+    draw.fill();
+    draw.closePath();
+
+    draw.restore();
+
+    // draw diamond over the shadow
+    draw.save();
+    draw.translate(this.origin_x, this.origin_y);
+    draw.beginPath();
+    draw.moveTo(0, -(this.size));
+    draw.lineTo(this.size, 0);
+    draw.lineTo(0, this.size);
+    draw.lineTo(-(this.size), 0);
+    draw.lineTo(0, -(this.size));
+    draw.lineWidth = 0.5;
+    draw.strokeStyle = this.border;
+    draw.fillStyle = this.fill;
+    draw.stroke();
+    draw.fill();
+    draw.closePath();
+    draw.restore();
+
+    if (this.lift_progress < this.lift_end) {
+        if (!this.menu_loaded && this.lift_progress > this.lift_end/2) {
+            // Display diamond content (e.g. titles, menus, etc.)
+            this.content.forEach(function(item) {
+                console.log(item);
+                item.display();
+            });
+            this.menu_loaded = true;
+        }
+        this.lift_progress += this.lift_rate;
+        this.fade_ratio += this.fade_change; // TODO: find smooth way to make sure that fade_ratio never goes higher than 1.0
+        this.size += 0.1;
+        window.requestAnimationFrame(() => {this.ani_elevation_draw()});
+    } else {
+        return;
     }
 }
 
@@ -218,15 +356,6 @@ function ani_size_init() {
 }
 
 function ani_size_draw() {
-
-}
-
-// Animate change in elevation
-function ani_elevation_init() {
-
-}
-
-function ani_elevation_draw() {
 
 }
 
