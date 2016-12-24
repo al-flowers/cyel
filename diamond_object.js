@@ -56,7 +56,7 @@ Diamond.prototype.display = function(rate = 1) {
 };
 
 // Move the diamond to the goal location
-// RELATIVE arguments
+// relative arguments
 Diamond.prototype.move = function(goal_x, goal_y, rate = 1) {
     this.rate = rate;
     this.progress_x = 0;
@@ -93,7 +93,7 @@ Diamond.prototype.move = function(goal_x, goal_y, rate = 1) {
 // Expand or contract the Diamond depending on the new_length in relation to the current_length
 // NOTE: size cannot be reduced to a value less than 0
 // IDEA: maybe implement acceleration into the change of the diamond size
-// ABSOLUTE arguments (consider changing to relative)
+// relative arguments
 Diamond.prototype.change_size = function(size_change, rate = 1) {
     if (size_change + this.size < 0) {
         console.error('Diamond size cannot be lower than 0');
@@ -115,7 +115,7 @@ Diamond.prototype.change_size = function(size_change, rate = 1) {
 
 // Raise or lower the Diamond object to change the shadow width/intensity
 // NOTE: elevation cannot be reduced to a value less than 0
-// ABSOULUTE arguments (consider changing to relative)
+// Relative arguments
 Diamond.prototype.change_elevation = function(new_elevation) {
     if (new_elevation < 0) {
         console.error('Diamond elevation cannot be lower than 0');
@@ -138,7 +138,6 @@ Diamond.prototype.rotate = function(angle, clockwise = true) {
 // ** ANIMATION FUNCTIONS **
 
 // TODO: make these methods private
-// TODO: maybe (just maybe) devise cleaner solution for scoping
 
 // Draw the diamond outline
 Diamond.prototype.draw_diamond = function() {
@@ -390,7 +389,6 @@ Diamond.prototype.ani_elevation_change = function() {
 };
 
 // Animate change in size
-// TODO: complete this function
 Diamond.prototype.ani_size_change = function() {
     draw.clearRect(0, 0, dimension_x, dimension_y);
 
