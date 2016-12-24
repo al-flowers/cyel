@@ -1,6 +1,6 @@
-/**************
- * GAME FIELD *
- **************/
+/**********************************************************
+ *                       GAME FIELD                       *
+ **********************************************************/
 var Field = function(gameType) {
     this.gameType = gameType;
     this.score = 0;
@@ -16,15 +16,16 @@ Field.prototype.clear_data = function() {
 Field.prototype.floor = function() {
     // floor all dormant pieces
 };
+
 Field.prototype.traverse = function() {
     // search all of the dormant data for activation units and follow through the resulting matching chains
 };
 
 
 
-/*******************
- * INDIVIDUAL UNIT *
- *******************/
+/**********************************************************
+ *                    INDIVIDUAL UNITS                    *
+ **********************************************************/
 var Unit = function(color, type, location, status) {
     this.color = color;
     this.type = type;
@@ -35,9 +36,9 @@ var Unit = function(color, type, location, status) {
 
 
 
-/*****************
- * PAIR OF UNITS *
- *****************/
+/**********************************************************
+ *                      PAIR OF UNITS                     *
+ **********************************************************/
 var Pair = function(units) {
     this.units = units;
     console.log('New pair created: ' + units[0].color + ',' + units[1].color);
@@ -45,9 +46,9 @@ var Pair = function(units) {
 
 
 
-/*************
- * MENU_ITEM *
- *************/
+/**********************************************************
+ *                        MENU ITEM                       *
+ **********************************************************/
 var MenuItem = function(name, avail, action) {
     this.name = name;
     this.availability = avail;
@@ -87,9 +88,9 @@ MenuItem.prototype.createDiv = function(group) {
 
 
 
-/********
- * MENU *
- ********/
+/**********************************************************
+ *                          MENU                          *
+ **********************************************************/
 var Menu = function(group, items) {
     this.menu_name = group;
     this.menu_items = items;
@@ -128,9 +129,9 @@ Menu.prototype.display = function() {
 
 
 
-/*********
- * TITLE *
- *********/
+/**********************************************************
+ *                          TITLE                         *
+ **********************************************************/
 var Title = function(id, title) {
     this.title = title;
     this.id = 'title_' + id;
