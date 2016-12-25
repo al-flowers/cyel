@@ -2,7 +2,13 @@
  *                     DIAMOND OBJECT                     *
  **********************************************************/
 
+/* The diamond object provides the framework for each puzzle piece. At least with the current game idea.
+ */
+
 // TODO: rename a lot of variables :c
+// TODO: ISSUE: creating a second diamond object clears any existing diamonds from the canvas because of clearRect()
+//          IDEA: Animation overlord: draws all objects in each animation frame. Every frame will pass through
+//                  the animation overlord's main draw loop. Long live creating issues through progress. :D :c :D
 
 var Diamond = function(id, x_position, y_position, size) {
     // set main attributes
@@ -26,6 +32,7 @@ Diamond.prototype.setColor = function(border, fill) {
 };
 
 // Display the Diamond using the 'Bleed' animation
+// TODO: (ultimately unnecessary) consider scaling the speed of the bleeding effect based on size.
 Diamond.prototype.display = function(rate = 1) {
     // set default variables for animations (bleed_in, elevation, ...)
     // TODO: find better names for most of these variables

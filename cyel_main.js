@@ -19,7 +19,7 @@
            Q4 2016
 */
 
-
+// the dimensions of the canvas. TODO: maybe find a dynamic solution
 var dimension_x = 1280;
 var dimension_y = 720;
 
@@ -63,6 +63,9 @@ function start_game() {
     // just testing some functions
     // title_diamond.move(50, 50);
     title_diamond.change_size(-50);
+    new_diamond = new Diamond('new_diamond', 960, 160, 120);
+    new_diamond.display();
+    new_diamond.change_elevation(40);
 }
 
 
