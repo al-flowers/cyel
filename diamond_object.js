@@ -16,11 +16,32 @@ var Diamond = function(id, x_position, y_position, size) {
     this.origin_x = x_position;
     this.origin_y = y_position;
     this.size = size;
-    this.border = "rgb(128, 128, 128)";
+    this.border = "rgb(100, 100, 100)";
     this.fill = "rgb(256, 256, 256)";
     this.elevation = 0;
     this.visible = false;
     this.content = [];
+
+    // extra diamond attributes required for drawing object
+    this.diamond_complete = false;
+    this.edge = Math.ceil(this.size * Math.sqrt(2));
+    this.half_edge = Math.ceil(this.edge/2);
+    this.line_progress = [this.half_edge, this.edge, this.half_edge, this.half_edge, this.half_edge, this.half_edge, this.half_edge];
+    this.line_complete = [false, false, false, false, false, false, false];
+    this.cover_color = "#FFFFFF";
+
+    // variables for drawing elevation
+    this.shadow_width = 40;
+    this.fade_ratio = 0.02;
+    this.fade_change = 0.002; // NOTE: needs fixing. a high enough number will break code
+    this.lift_progress = 0;
+    this.lift_end = 100;
+    this.lift_rate = 1;
+    this.items_loaded = false;
+    this.shadow_transparency_begin = 0.65;
+    this.shadow_transparency_end = 0.1;
+
+    this.ani_status = 'initial';
 
     console.log('New Diamond object created');
 };
@@ -32,34 +53,27 @@ Diamond.prototype.setColor = function(border, fill) {
 };
 
 // Display the Diamond using the 'Bleed' animation
-// TODO: (ultimately unnecessary) consider scaling the speed of the bleeding effect based on size.
+// TODO: consider scaling the speed of the bleeding effect based on size.
 Diamond.prototype.display = function(rate = 1) {
     // set default variables for animations (bleed_in, elevation, ...)
     // TODO: find better names for most of these variables
-    // bleed_in
-    this.rate = rate; // WARNING: be careful of floating point values. they may break the fillRect function. We'll see though.
-    this.diamond_complete = false;
-    this.edge = Math.ceil(this.size * Math.sqrt(2));
-    this.half_edge = Math.ceil(this.edge/2);
-    this.line_progress = [this.half_edge, this.edge, this.half_edge, this.half_edge, this.half_edge, this.half_edge, this.half_edge];
-    this.line_complete = [false, false, false, false, false, false, false];
-    this.cover_color = "#FFFFFF";
+    this.draw_shadow();
+    this.draw_diamond();
 
-    // elevate
-    this.shadow_width = 40;
-    this.fade_ratio = 0.02;
-    this.fade_change = 0.002; // NOTE: needs fixing. a high enough number will break code
-    this.lift_progress = 0;
-    this.lift_end = 100;
-    this.lift_rate = 1;
-    this.items_loaded = false;
-    this.shadow_transparency_begin = 0.65;
-    this.shadow_transparency_end = 0.1;
+    if (this.ani_status === 'initial') {
+        this.visible = true;
+        this.rate = rate; // WARNING: be careful of floating point values. they may break the fillRect function. We'll see though.
 
-    window.requestAnimationFrame(() => {this.ani_intro_bleed()});
-
-    this.visible = true;
-    console.log('diamond displayed');
+        this.ani_status = 'bleed';
+        this.ani_intro_bleed();
+    } else if (this.ani_status === 'bleed') {
+        this.ani_intro_bleed();
+    } else if (this.ani_status === 'elevate') {
+        this.ani_elevation_change();
+    } else if (this.ani_status === 'complete') {
+        console.log("Diamond is complete");
+        this.ani_status = 'stable';
+    }
 };
 
 // Move the diamond to the goal location
@@ -79,6 +93,7 @@ Diamond.prototype.move = function(goal_x, goal_y, rate = 1) {
     this.velocity_x = velocity * Math.sin(angle);
     this.velocity_y = velocity * Math.cos(angle);
 
+    // TODO: search for a more elegant solution...
     if (this.end_x < 0) {
         this.move_x_sign = -1;
     } else {
@@ -128,6 +143,8 @@ Diamond.prototype.change_elevation = function(new_elevation) {
         console.error('Diamond elevation cannot be lower than 0');
         return;
     }
+
+
 };
 
 // map div items to the diamond
@@ -143,8 +160,6 @@ Diamond.prototype.rotate = function(angle, clockwise = true) {
 }
 
 // ** ANIMATION FUNCTIONS **
-
-// TODO: make these methods private
 
 // Draw the diamond outline
 Diamond.prototype.draw_diamond = function() {
@@ -244,8 +259,6 @@ Diamond.prototype.draw_shadow = function() {
 
 // Recursive loop for drawing the 'fade/bleed-in' animation for the diamond outline
 Diamond.prototype.ani_intro_bleed = function() {
-    draw.clearRect(0, 0, dimension_x, dimension_y);
-
     this.draw_shadow();
     this.draw_diamond();
 
@@ -357,17 +370,12 @@ Diamond.prototype.ani_intro_bleed = function() {
     }
 
     if (this.diamond_complete) {
-        window.requestAnimationFrame(() => {this.ani_elevation_change()});
-        return;
-    } else {
-        window.requestAnimationFrame(() => {this.ani_intro_bleed()});
+        this.ani_status = 'elevate';
     }
 };
 
 // TODO: make work with a negative elevation change
 Diamond.prototype.ani_elevation_change = function() {
-    draw.clearRect(0, 0, dimension_x, dimension_y);
-
     // make sure that the diamond is not drawn at a higher elevation than desired
     if (this.lift_progress >= this.lift_end) {
         this.lift_progress = this.lift_end;
@@ -389,9 +397,8 @@ Diamond.prototype.ani_elevation_change = function() {
         // TODO: or maybe create a centralized draw function for drawing the diamond. This funciton is going to be used A LOT. k?
         this.fade_ratio += this.fade_change; // TODO: find smooth way to make sure that fade_ratio never goes higher than 1.0
         this.size += 0.05;
-        window.requestAnimationFrame(() => {this.ani_elevation_change()});
     } else {
-        return;
+        this.ani_status = 'complete';
     }
 };
 

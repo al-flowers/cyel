@@ -66,14 +66,16 @@ MenuItem.prototype.createDiv = function(group) {
     // if a menu item is selectable then add the appropriate functionality and hover animation
     if (this.availability) {
         $(this.div).hover(function() {
+            $(this).stop();
             $(this).animate({
                 color: "#000000"
-            }, 100);
+            }, 80);
         },
         function() {
+            $(this).stop();
             $(this).animate({
                 color: "#CCCCCC"
-            }, 100);
+            }, 80);
         });
 
         var action = this.action;
@@ -83,7 +85,7 @@ MenuItem.prototype.createDiv = function(group) {
     }
 }
 
-// TODO: consider implementing private variables using the 'underscore'vtechnique
+// TODO: consider implementing private variables using the 'underscore' technique
 //         mentioned at: https://philipwalton.com/articles/implementing-private-and-protected-members-in-javascript/
 
 
