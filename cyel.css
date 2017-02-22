@@ -43,7 +43,6 @@ div.main:hover {
 /* Menu */
 div.title {
     position: absolute;
-    font-family: "Courier New", Courier, monospace;
     text-align: center;
     margin-left: auto;
     margin-right: auto;
@@ -62,7 +61,6 @@ div.menu {
 }
 
 div.menu_item {
-    font-family: "Courier New", Courier, monospace;
     color: #CCCCCC;
     padding: 3px 10px;
     margin-top: 7px;

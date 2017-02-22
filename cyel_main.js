@@ -1,13 +1,13 @@
 /*
               *
            /     \
-        /           \
+  IV    /           \    I
      /                 \
   /                       \
 *          c y e l          *
   \                       /
      \                 /
-        \           /
+  III   \           /    II
            \     /
               *
 
@@ -38,7 +38,7 @@ $(function() {
     // initialize the game canvas and Animation Overlord
     draw = document.getElementById("canvas").getContext("2d");
     draw.globalCompositeOperation = 'source-over';
-    ani_overlord = new Animation_Overlord(draw);
+    ani_overlord = new AnimationOverlord(draw);
 
     // first diamond object holding the main menu
     title_diamond = new Diamond('title', 640, 360, 320);
@@ -74,6 +74,12 @@ function start_game() {
     new_diamond2 = new Diamond('new_diamond2', 960, 560, 120);
     new_diamond3 = new Diamond('new_diamond3', 320, 560, 120);
     new_diamond4 = new Diamond('new_diamond4', 320, 160, 120);
+
+    new_diamond1.setColor("#F69A9A", "#F69A9A");
+    new_diamond2.setColor("#F9CDAE", "#F9CDAE");
+    new_diamond3.setColor("#83AE9B", "#83AE9B");
+    new_diamond4.setColor("#C8C8A9", "#C8C8A9");
+
     ani_overlord.add('new_diamond1', new_diamond1);
     ani_overlord.add('new_diamond2', new_diamond2);
     ani_overlord.add('new_diamond3', new_diamond3);

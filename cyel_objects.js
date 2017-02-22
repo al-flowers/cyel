@@ -6,7 +6,7 @@ var Field = function(gameType) {
     this.score = 0;
     this.active_units = [];
     this.dormant_units = [[], [], [], [], [], [], [], []];
-    console.log('New ' + gameType + ' game started');
+    //console.log('New ' + gameType + ' game started');
 };
 
 Field.prototype.clear_data = function() {
@@ -31,7 +31,7 @@ var Unit = function(color, type, location, status) {
     this.type = type;
     this.location = location;
     this.status = status;
-    console.log('New ' + color + ' ' + type + ' piece created at ' + location[0] + ',' + location[1]);
+    //console.log('New ' + color + ' ' + type + ' piece created at ' + location[0] + ',' + location[1]);
 };
 
 
@@ -41,7 +41,7 @@ var Unit = function(color, type, location, status) {
  **********************************************************/
 var Pair = function(units) {
     this.units = units;
-    console.log('New pair created: ' + units[0].color + ',' + units[1].color);
+    //console.log('New pair created: ' + units[0].color + ',' + units[1].color);
 };
 
 
@@ -55,7 +55,7 @@ var MenuItem = function(name, avail, action) {
     this.action = action;
     // NOTE: there is also a div attribute
 
-    console.log('New MenuItem created');
+    //console.log('New MenuItem created');
 }
 
 MenuItem.prototype.createDiv = function(group) {
@@ -103,12 +103,12 @@ var Menu = function(group, items) {
         item.createDiv('main');
     });
 
-    console.log('New Menu created');
+    //console.log('New Menu created');
 };
 
 // display the menu object
 Menu.prototype.display = function() {
-    console.log('displaying menu...');
+    //console.log('displaying menu...');
 
     // the menu div will hold all of the menu items
     var menu_div = document.createElement('div');
@@ -144,11 +144,11 @@ var Title = function(id, title) {
     this.div.innerHTML = title;
     this.div.style.opacity = 0.0;
 
-    console.log('New Title created');
+    //console.log('New Title created');
 };
 
 Title.prototype.display = function() {
-    console.log('displaying title...');
+    //console.log('displaying title...');
 
     document.getElementById('main_div').appendChild(this.div);
 
