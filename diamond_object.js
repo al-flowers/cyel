@@ -2,6 +2,8 @@
 /*                     DIAMOND OBJECT                     */
 /**********************************************************/
 
+// TODO: Either implement the rate variable or get rid of it. please
+
 /* The diamond object provides the framework for each puzzle piece. At least with the current game idea.
  */
 
@@ -15,10 +17,15 @@ var Diamond = function(id, x_position, y_position, size) {
     this.fill = "rgb(256, 256, 256)";
     this.hasColor = false;
     this.elevation = 0;
-    this.visible = false;
+    this.visible = true;
     this.content = [];
     this.edge_length = Math.ceil(this.size * Math.sqrt(2));
     this.half_edge_length = Math.ceil(this.edge_length/2);
+
+    this.angle = 0;
+    this.rotation_goal;
+    this.rotation_direction;
+    this.rotation_modifier = 1;
 
     // bleed animation variables
     this.diamond_complete = false;
@@ -28,13 +35,14 @@ var Diamond = function(id, x_position, y_position, size) {
 
     this.diamond_filled = false;
     this.fill_size = 0;
+    this.fill_modifier = 1;
 
     // Shadow variables
     this.shadow_fade_width = 0;
 
-    this.elevation_progress = 0;
     this.elevation_goal = 0;
-    this.elevation_rate = 2;
+    this.elevation_velocity = 2;
+    this.elevation_modifier = 1;
 
     this.items_loaded = false;
     this.shadow_start_opacity = 0.45;
@@ -43,7 +51,8 @@ var Diamond = function(id, x_position, y_position, size) {
     // misc animation variables
     this.elevation_direction = 1;  // Will be 1 if raising or -1 is lowering
 
-    this.status = 'initial';
+    this.status_queue = [];
+    this.status = 'bleed';
 
     console.log('New Diamond object created');
 };
@@ -57,6 +66,7 @@ var Diamond = function(id, x_position, y_position, size) {
 Diamond.prototype.drawObject = function() {
     draw.save();
     draw.translate(this.origin_x, this.origin_y);
+    draw.rotate(this.angle * Math.PI/180);
 
     draw.beginPath();
     draw.moveTo(0, -(this.size));
@@ -82,12 +92,13 @@ Diamond.prototype.drawObject = function() {
 // Draw the shadow of the diamond object
 Diamond.prototype.drawShadow = function() {
     var shadow;
-    var shadow_dist = this.elevation_progress * 0.05;
+    var shadow_dist = this.elevation * 0.05;
     var shadow_size = this.size - 1;
     var fade_shift_line = 0.5
 
     draw.save();
     draw.translate(this.origin_x - shadow_dist, this.origin_y);
+    draw.rotate(this.angle * Math.PI/180);
 
 
     // draw main shadow block
@@ -240,7 +251,9 @@ Diamond.prototype.resize = function(new_size, rate = 1) {
 // Raise or lower the Diamond object by changing the object size and shadow width/intensity
 // NOTE: elevation cannot be reduced to a value less than 0
 Diamond.prototype.setElevation = function(new_elevation, rate = 1) {
-    this.status = 'elevate';
+    this.status_queue.push('elevate');
+    this.elevation_modifier = rate;
+
     if (new_elevation < 0) {
         console.error('Diamond elevation cannot be lower than 0');
         return;
@@ -259,16 +272,23 @@ Diamond.prototype.setElevation = function(new_elevation, rate = 1) {
 
 
 // rotate the entire diamond
-// if clockwise is set to false then the diamond will rotate counter-clockwise instead
-// TODO: this method
-Diamond.prototype.rotate = function(angle, clockwise = true, rate = 1) {
+Diamond.prototype.rotate = function(angle, rate = 1) {
+    this.rotation_goal = angle;
+    this.rotation_modifier = rate;
 
+    if (angle >= 0) {
+        this.rotation_direction = 1;
+    } else {
+        this.rotation_direction = -1;
+    }
+
+    this.status_queue.push('rotate');
 };
 
 
 // Display the associated div content
 Diamond.prototype.displayContent = function() {
-    if (!this.menu_loaded && this.elevation_progress > this.elevation_goal/2) {
+    if (!this.menu_loaded && this.elevation > this.elevation_goal/2) {
         // Display diamond content (e.g. titles, menus, etc.)
         this.content.forEach(function(item) {
             item.display();
@@ -285,13 +305,12 @@ Diamond.prototype.displayContent = function() {
 // Call the appropriate specific update functions to execute the appropriate animations
 Diamond.prototype.update = function() {
     switch (this.status) {
-        // intro statuses
-        case 'initial':
-            console.log('initial');
-            this.visible = true;
-            this.status = 'bleed';
-            this.updateIntro();
+        case 'stable':
+            console.log('stable');
+            this.status = this.status_queue.shift();
             break;
+
+        // intro statuses
         case 'bleed':
             console.log('bleed');
             this.updateIntro();
@@ -467,7 +486,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
 
 
 // Animate color fill
-Diamond.prototype.updateColorFill = function(rate = 1) {
+Diamond.prototype.updateColorFill = function() {
 
     // make sure the color fill does not grow past the boundary of the diamond
     if (this.fill_size >= this.size) {
@@ -492,35 +511,70 @@ Diamond.prototype.updateColorFill = function(rate = 1) {
     draw.restore();
 
     if (this.diamond_filled || !this.hasColor) {
-        this.setElevation(200);
+        this.status = 'elevate';
+        this.elevation_goal = 200;
+        this.elevation_direction = 1;
     } else {
-        this.fill_size += 3 * rate;
+        this.fill_size += 3 * this.fill_modifier;
     }
 };
 
 
-Diamond.prototype.updateElevation = function(rate = 1) {
-    var progress = this.elevation_progress * this.elevation_direction;
+// Alternate color fill animation
+Diamond.prototype.updateColorFillv2 = function() {
+    if (this.fill_size >= this.size) {
+        this.fill_size = this.size;
+        this.diamond_filled = true;
+    }
+
+    var progress = this.size - this.fill_size;
+
+    // Draw the shrinking inner diamond with color
+    draw.save();
+    draw.translate(this.origin_x, this.origin_y);
+
+    draw.beginPath();
+    draw.moveTo(0, -(progress));
+    draw.lineTo(progress, 0);
+    draw.lineTo(0, progress);
+    draw.lineTo(-(progress), 0);
+    draw.lineTo(0, -(progress));
+    draw.fillStyle = "rgb(256, 256, 256)";
+    draw.fill();
+    draw.closePath();
+
+    draw.restore();
+
+    if (this.diamond_filled || !this.hasColor) {
+        this.setElevation(200);
+    } else {
+        this.fill_size += 3 * this.fill_modifier;
+    }
+};
+
+
+Diamond.prototype.updateElevation = function() {
+    var progress = this.elevation * this.elevation_direction;
     var goal = this.elevation_goal * this.elevation_direction;
 
     // make sure that the diamond is not drawn at a higher or lower elevation than desired
     if (progress >= goal) {
-        this.elevation_progress = this.elevation_goal;
-        this.status = 'intro_complete';
+        this.elevation = this.elevation_goal;
+        this.status = 'stable';
+        this.status_queue.push('intro_complete');
         return;
 
     } else {
-        this.elevation_progress += this.elevation_rate * this.elevation_direction * rate;
+        this.elevation += this.elevation_velocity * this.elevation_direction * this.elevation_modifier;
         //this.fade_ratio += this.fade_change; // TODO: find smooth way to make sure that fade_ratio never goes higher than 1.0
-        this.shadow_fade_width += 0.1 * rate;
-        this.size += 0.05 * rate;
+        this.shadow_fade_width += 0.1 * this.elevation_modifier;
+        this.size += 0.05 * this.elevation_modifier;
     }
 };
 
 
 // Animate change in size
 Diamond.prototype.updateSize = function(rate = 1) {
-    draw.clearRect(0, 0, dimension_x, dimension_y);
 
     console.log('diamond size: ' + this.size);
 
@@ -540,6 +594,16 @@ Diamond.prototype.updateSize = function(rate = 1) {
 
 
 // Animate rotation of diamond
-Diamond.prototype.updateRotation = function(rate = 1) {
+Diamond.prototype.updateRotation = function() {
+    var progress = this.angle * this.rotation_direction;
+    var goal = this.rotation_goal * this.rotation_direction;
 
+    if (progress >= goal) {
+        this.angle = this.rotation_goal;
+        this.status = 'stable';
+        return;
+
+    } else {
+        this.angle += 2 * this.rotation_direction * this.rotation_modifier;
+    }
 };

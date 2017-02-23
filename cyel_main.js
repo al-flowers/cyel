@@ -84,7 +84,11 @@ function start_game() {
     ani_overlord.add('new_diamond2', new_diamond2);
     ani_overlord.add('new_diamond3', new_diamond3);
     ani_overlord.add('new_diamond4', new_diamond4);
-    //new_diamond.change_elevation(40);
+
+    ani_overlord.ani_objects['new_diamond1'].rotate(360, 1);
+    ani_overlord.ani_objects['new_diamond2'].rotate(360, 2);
+    ani_overlord.ani_objects['new_diamond3'].rotate(360, 4);
+    ani_overlord.ani_objects['new_diamond4'].rotate(360, 8);
 }
 
 
