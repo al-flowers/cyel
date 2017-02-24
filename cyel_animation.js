@@ -12,12 +12,14 @@ var AnimationOverlord = function(canvas) {
     // TODO: figure out how to loop through all of an object's objects
     this.ani_queue = [];
     this.ani_objects = {};
+    this.predecessor = {};
 };
 
 
 // add an object with a display function to the Animation Overlord's army
-AnimationOverlord.prototype.add = function(id, object) {
+AnimationOverlord.prototype.add = function(id, object, predecessor) {
     this.ani_objects[id] = object;
+    this.predecessor[id] = predecessor;
     this.ani_queue.push(id);
 };
 
@@ -32,11 +34,22 @@ AnimationOverlord.prototype.remove = function(id) {
 
 AnimationOverlord.prototype.animate = function() {
     draw.clearRect(0, 0, dimension_x, dimension_y);
+    var parent_complete;
 
     // draw all object shadows in one layer
     this.ani_queue.forEach((object_id) => {
+        if (this.ani_objects[this.predecessor[object_id]]) {
+            parent_complete = this.ani_objects[this.predecessor[object_id]].activate_children;
+        } else {
+            parent_complete = true;
+        }
+
         if (this.ani_objects[object_id]) {
-            this.ani_objects[object_id].drawShadow();
+
+            if (parent_complete){
+                this.ani_objects[object_id].drawShadow();
+            }
+
         } else {
             console.log("object with id \'" + title + "\' doesn't exist. sry pal.");
             return;
@@ -46,9 +59,17 @@ AnimationOverlord.prototype.animate = function() {
 
     // draw all objects in a layer over the object shadows and update the object's attributes
     this.ani_queue.forEach((object_id) => {
+        if (this.ani_objects[this.predecessor[object_id]]) {
+            parent_complete = this.ani_objects[this.predecessor[object_id]].activate_children;
+        } else {
+            parent_complete = true;
+        }
         if (this.ani_objects[object_id]) {
-            this.ani_objects[object_id].drawObject();
-            this.ani_objects[object_id].update();
+            if (parent_complete) {
+                this.ani_objects[object_id].drawObject();
+                this.ani_objects[object_id].update();
+            }
+
         } else {
             console.log("object with id \'" + title + "\' doesn't exist. sry pal.");
             return;

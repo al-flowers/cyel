@@ -2,7 +2,7 @@
 /*                     DIAMOND OBJECT                     */
 /**********************************************************/
 
-// TODO: Either implement the rate variable or get rid of it. please
+// TODO:
 
 /* The diamond object provides the framework for each puzzle piece. At least with the current game idea.
  */
@@ -17,19 +17,19 @@ var Diamond = function(id, x_position, y_position, size) {
     this.content = [];
     this.status_queue = ['intro_complete'];
     this.status = 'bleed';
+    this.activate_children = false;
 
     // Position variables
     this.origin_x = x_position;
     this.origin_y = y_position;
     this.velocity_x;
     this.velocity_y;
-    this.progress_x = 0;
-    this.progress_y = 0;
+    this.progress_x;
+    this.progress_y;
     this.destination_x;
     this.destination_y;
     this.dest_x_reached;
     this.dest_y_reached;
-
 
     // Size variables
     this.size = size; // the distance between the origin and a corner of the diamond
@@ -208,15 +208,28 @@ Diamond.prototype.addContent = function(content_item) {
 };
 
 // Move the diamond to the goal location
-Diamond.prototype.moveTo = function(goal_x, goal_y, velocity = 5) {
+Diamond.prototype.moveTo = function(goal_x, goal_y, velocity, activateChildren = false) {
     this.status_queue.push('move');
+    if (activateChildren) {
+        this.status_queue.push('activate_children');
+    }
 
     // NOTE: origin_x and origin_y should never be negative. May have to implement some safeguards.
 
+    console.log('goal_x: ' + goal_x);
+    console.log('goal_y: ' + goal_y);
+    console.log('origin_x: ' + this.origin_x);
+    console.log('origin_y: ' + this.origin_y);
+
     this.progress_x = 0;
     this.progress_y = 0;
+    this.goal_x = goal_x;
+    this.goal_y = goal_y;
     this.destination_x = Math.abs(goal_x - this.origin_x);
     this.destination_y = Math.abs(goal_y - this.origin_y);
+
+    console.log(this.destination_x);
+    console.log(this.destination_y);
 
     this.dest_x_reached = false;
     this.dest_y_reached = false;
@@ -224,8 +237,8 @@ Diamond.prototype.moveTo = function(goal_x, goal_y, velocity = 5) {
     // time to incorporate some (very simple) physics!
     if (this.destination_x > 0 && this.destination_y > 0) {
         var angle = Math.atan(this.destination_y/this.destination_x);
-        this.velocity_x = velocity * Math.sin(angle);
-        this.velocity_y = velocity * Math.cos(angle);
+        this.velocity_x = velocity * Math.cos(angle);
+        this.velocity_y = velocity * Math.sin(angle);
     } else if (this.destination_x == 0) {
         this.velocity_x = 0;
         this.velocity_y = velocity;
@@ -246,13 +259,13 @@ Diamond.prototype.moveTo = function(goal_x, goal_y, velocity = 5) {
     } else {
         this.direction_y = 1;
     }
-    console.log('v: ' + velocity + '\nd_x: ' + this.destination_x + '\nd_y: ' + this.destination_y + '\na: ' + angle + '\nv_x: ' + this.velocity_x + '\nv_y: ' + this.velocity_y);
+    console.log('v: ' + velocity + '\nd_x: ' + (this.destination_x * this.direction_x) + '\nd_y: ' + (this.destination_y * this.direction_y) + '\na: ' + this.angle + '\nv_x: ' + this.velocity_x + '\nv_y: ' + this.velocity_y);
 };
 
 
 // NOTE: size cannot be reduced to a value less than 0
 // IDEA: maybe implement acceleration into the change of the diamond size
-Diamond.prototype.resize = function(new_size, rate = 1) {
+Diamond.prototype.resize = function(new_size, rate, activateChildren = false) {
     if (size_change + this.size < 0) {
         console.error('Diamond size cannot be lower than 0');
         return;
@@ -271,7 +284,7 @@ Diamond.prototype.resize = function(new_size, rate = 1) {
 
 // Raise or lower the Diamond object by changing the object size and shadow width/intensity
 // NOTE: elevation cannot be reduced to a value less than 0
-Diamond.prototype.setElevation = function(new_elevation, rate = 1) {
+Diamond.prototype.setElevation = function(new_elevation, rate, activateChildren = false) {
     this.status_queue.push('elevate');
     this.elevation_modifier = rate;
 
@@ -293,7 +306,7 @@ Diamond.prototype.setElevation = function(new_elevation, rate = 1) {
 
 
 // rotate the entire diamond
-Diamond.prototype.rotate = function(angle, rate = 1) {
+Diamond.prototype.rotate = function(angle, rate, activateChildren = false) {
     this.rotation_goal = angle;
     this.rotation_modifier = rate;
 
@@ -362,6 +375,11 @@ Diamond.prototype.update = function() {
             console.log('rotate');
             this.updateRotation();
             break;
+        case 'activate_children':
+            console.log('activate_children');
+            this.activate_children = true;
+            this.status = 'stable';
+            break;
         default:
             break;
     }
@@ -373,30 +391,36 @@ Diamond.prototype.updatePosition = function() {
     // make sure the diamond is not drawn at a further position than desired
     if (this.progress_x >= this.destination_x) {
         this.progress_x = this.destination_x;
+        this.origin_x = this.goal_x;
         this.dest_x_reached = true;
     }
     if (this.progress_y >= this.destination_y) {
         this.progress_y = this.destination_y;
+        this.origin_y = this.goal_y;
         this.dest_y_reached = true;
     }
+
+    //console.log('current_origin: (' + this.origin_x + ', ' + this.origin_y + ')');
 
     // update the position change progress
     if (this.dest_x_reached && this.dest_y_reached) {
         this.status = 'stable';
         return;
-    } else if (!this.dest_x_reached) {
+    }
+    if (!this.dest_x_reached) {
         this.progress_x += this.velocity_x;
         this.origin_x += this.velocity_x * this.direction_x;
-    } else if (!this.dest_y_reached) {
+    }
+    if (!this.dest_y_reached) {
         this.progress_y += this.velocity_y;
         this.origin_y += this.velocity_y * this.direction_y;
     }
-    console.log('new_origin: (' + this.origin_x + ', ' + this.origin_y + ')');
+
 };
 
 
 // 'fade/bleed-in' animation for the diamond outline
-Diamond.prototype.updateIntro = function(rate = 1) {
+Diamond.prototype.updateIntro = function() {
 
     this.diamond_complete = true; // this will become false if the diamond isn't fully visible yet
     for (var i=0; i < 7; i++) {
@@ -417,7 +441,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.fillRect((this.half_edge_length + 2) - this.line_progress[0], 0, this.line_progress[0], 4);
         draw.closePath();
         draw.restore();
-        this.line_progress[0] -= 4 * rate;
+        this.line_progress[0] -= 4;
     }
 
     // Top Right Quadrant (1/1)
@@ -431,7 +455,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.closePath();
         draw.restore();
         if (this.line_complete[0]) {
-            this.line_progress[1] -= 4 * rate;
+            this.line_progress[1] -= 4;
         }
     }
 
@@ -446,7 +470,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.closePath();
         draw.restore();
         if (this.line_complete[1]) {
-            this.line_progress[2] -= 4 * rate;
+            this.line_progress[2] -= 4;
         }
     }
 
@@ -460,7 +484,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.fillRect(0, 0, this.line_progress[3], 4);
         draw.closePath();
         draw.restore();
-        this.line_progress[3] -= rate;
+        this.line_progress[3] -= 1;
     }
 
     // Bottom Left Quadrant (1/2)
@@ -473,7 +497,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.fillRect((this.half_edge_length + 2) - this.line_progress[4], 0, this.line_progress[4], 4);
         draw.closePath();
         draw.restore();
-        this.line_progress[4] -= rate;
+        this.line_progress[4] -= 1;
     }
 
     // Bottom Left Quadrant (2/2)
@@ -487,7 +511,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.closePath();
         draw.restore();
         if (this.line_complete[6]) {
-            this.line_progress[5] -= 2 * rate;
+            this.line_progress[5] -= 2;
         }
     }
 
@@ -501,7 +525,7 @@ Diamond.prototype.updateIntro = function(rate = 1) {
         draw.fillRect(0, 0, this.line_progress[6], 4);
         draw.closePath();
         draw.restore();
-        this.line_progress[6] -= 2 * rate;
+        this.line_progress[6] -= 2;
     }
 
     if (this.diamond_complete) {
@@ -571,7 +595,7 @@ Diamond.prototype.updateColorFillv2 = function() {
     draw.restore();
 
     if (this.diamond_filled || !this.hasColor) {
-        this.setElevation(200);
+        this.setElevation(200, 1);
     } else {
         this.fill_size += 3 * this.fill_modifier;
     }
@@ -598,7 +622,7 @@ Diamond.prototype.updateElevation = function() {
 
 
 // Animate change in size
-Diamond.prototype.updateSize = function(rate = 1) {
+Diamond.prototype.updateSize = function() {
 
     console.log('diamond size: ' + this.size);
 

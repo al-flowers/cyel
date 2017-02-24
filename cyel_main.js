@@ -41,7 +41,7 @@ $(function() {
     ani_overlord = new AnimationOverlord(draw);
 
     // first diamond object holding the main menu
-    title_diamond = new Diamond('title', 640, 360, 320);
+    title_diamond = new Diamond('title', 640, 360, 315);
 
     // main menu and title
     var title = new Title('Main', 'c y e l');
@@ -70,10 +70,10 @@ $(function() {
 function start_game() {
     // just testing some functions
     // title_diamond.move(50, 50);
-    new_diamond1 = new Diamond('new_diamond1', 960, 160, 120);
-    new_diamond2 = new Diamond('new_diamond2', 960, 560, 120);
-    new_diamond3 = new Diamond('new_diamond3', 320, 560, 120);
-    new_diamond4 = new Diamond('new_diamond4', 320, 160, 120);
+    new_diamond1 = new Diamond('new_diamond1', 960, 160, 35);
+    new_diamond2 = new Diamond('new_diamond2', 960, 560, 35);
+    new_diamond3 = new Diamond('new_diamond3', 320, 560, 35);
+    new_diamond4 = new Diamond('new_diamond4', 320, 160, 35);
 
     new_diamond1.setColor("#F69A9A", "#F69A9A");
     new_diamond2.setColor("#F9CDAE", "#F9CDAE");
@@ -85,15 +85,48 @@ function start_game() {
     ani_overlord.add('new_diamond3', new_diamond3);
     ani_overlord.add('new_diamond4', new_diamond4);
 
-    ani_overlord.ani_objects['new_diamond1'].rotate(360, 1);
+    ani_overlord.ani_objects['new_diamond1'].rotate(360, 1.5);
     ani_overlord.ani_objects['new_diamond2'].rotate(360, 2);
     ani_overlord.ani_objects['new_diamond3'].rotate(360, 4);
-    ani_overlord.ani_objects['new_diamond4'].rotate(360, 8);
+    ani_overlord.ani_objects['new_diamond4'].rotate(360, 6);
 
-    ani_overlord.ani_objects['new_diamond1'].moveTo(960, 360);
-    ani_overlord.ani_objects['new_diamond2'].moveTo(960, 360);
-    ani_overlord.ani_objects['new_diamond3'].moveTo(320, 360);
-    ani_overlord.ani_objects['new_diamond4'].moveTo(320, 360);
+    // ani_overlord.ani_objects['new_diamond1'].moveTo(960, 320, 5, true);
+    // ani_overlord.ani_objects['new_diamond2'].moveTo(960, 400, 5, true);
+    // ani_overlord.ani_objects['new_diamond3'].moveTo(320, 400, 5, true);
+    // ani_overlord.ani_objects['new_diamond4'].moveTo(320, 320, 5, true);
+
+    // TODO: allow consecutive moves of the same type
+    // IDEA: make an 'Action' class
+
+    ani_overlord.ani_objects['new_diamond1'].moveTo(680, 40, 5, true);
+    ani_overlord.ani_objects['new_diamond2'].moveTo(680, 680, 5, true);
+    ani_overlord.ani_objects['new_diamond3'].moveTo(600, 680, 5, true);
+    ani_overlord.ani_objects['new_diamond4'].moveTo(600, 40, 5, true);
+
+    new_diamond5 = new Diamond('new_diamond5', 960, 160, 35);
+    new_diamond6 = new Diamond('new_diamond6', 960, 560, 35);
+    new_diamond7 = new Diamond('new_diamond7', 320, 560, 35);
+    new_diamond8 = new Diamond('new_diamond8', 320, 160, 35);
+
+    new_diamond5.setColor("#F69A9A", "#F69A9A");
+    new_diamond6.setColor("#F9CDAE", "#F9CDAE");
+    new_diamond7.setColor("#83AE9B", "#83AE9B");
+    new_diamond8.setColor("#C8C8A9", "#C8C8A9");
+
+    ani_overlord.add('new_diamond5', new_diamond5, 'new_diamond1');
+    ani_overlord.add('new_diamond6', new_diamond6, 'new_diamond2');
+    ani_overlord.add('new_diamond7', new_diamond7, 'new_diamond3');
+    ani_overlord.add('new_diamond8', new_diamond8, 'new_diamond4');
+
+    ani_overlord.ani_objects['new_diamond5'].rotate(360, 1.5);
+    ani_overlord.ani_objects['new_diamond6'].rotate(360, 2);
+    ani_overlord.ani_objects['new_diamond7'].rotate(360, 4);
+    ani_overlord.ani_objects['new_diamond8'].rotate(360, 6);
+
+    ani_overlord.ani_objects['new_diamond5'].moveTo(960, 320, 5, true);
+    ani_overlord.ani_objects['new_diamond6'].moveTo(960, 400, 5, true);
+    ani_overlord.ani_objects['new_diamond7'].moveTo(320, 400, 5, true);
+    ani_overlord.ani_objects['new_diamond8'].moveTo(320, 320, 5, true);
 }
 
 
