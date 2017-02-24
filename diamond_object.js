@@ -8,51 +8,61 @@
  */
 
 var Diamond = function(id, x_position, y_position, size) {
-    // set main attributes
+    // General Attributes
     this.id = id;
-    this.origin_x = x_position;
-    this.origin_y = y_position;
-    this.size = size; // the distance between the origin and a corner of the diamond
     this.border = "rgb(70, 70, 70)";
     this.fill = "rgb(256, 256, 256)";
     this.hasColor = false;
-    this.elevation = 0;
     this.visible = true;
     this.content = [];
+    this.status_queue = ['intro_complete'];
+    this.status = 'bleed';
+
+    // Position variables
+    this.origin_x = x_position;
+    this.origin_y = y_position;
+    this.velocity_x;
+    this.velocity_y;
+    this.progress_x = 0;
+    this.progress_y = 0;
+    this.destination_x;
+    this.destination_y;
+    this.dest_x_reached;
+    this.dest_y_reached;
+
+
+    // Size variables
+    this.size = size; // the distance between the origin and a corner of the diamond
     this.edge_length = Math.ceil(this.size * Math.sqrt(2));
     this.half_edge_length = Math.ceil(this.edge_length/2);
 
+    // Rotation variables
     this.angle = 0;
     this.rotation_goal;
     this.rotation_direction;
     this.rotation_modifier = 1;
 
-    // bleed animation variables
+    // Intro animation variables (including updateColorFill variables)
     this.diamond_complete = false;
     this.line_progress = [this.half_edge_length, this.edge_length, this.half_edge_length, this.half_edge_length, this.half_edge_length, this.half_edge_length, this.half_edge_length];
     this.line_complete = [false, false, false, false, false, false, false];
     this.cover_color = "white";  // This would only ever change for debugging purposes
-
     this.diamond_filled = false;
     this.fill_size = 0;
     this.fill_modifier = 1;
+    this.items_loaded = false;
+
+    // Elevation variables
+    this.elevation = 0;
+    this.elevation_goal = 0;
+    this.elevation_velocity = 2;
+    this.elevation_direction = 1;  // Will be 1 if ascending or -1 if descending
+    this.elevation_modifier = 1;
 
     // Shadow variables
     this.shadow_fade_width = 0;
-
-    this.elevation_goal = 0;
-    this.elevation_velocity = 2;
-    this.elevation_modifier = 1;
-
-    this.items_loaded = false;
     this.shadow_start_opacity = 0.45;
     this.shadow_end_opacity = 0.01;
-
-    // misc animation variables
-    this.elevation_direction = 1;  // Will be 1 if raising or -1 is lowering
-
-    this.status_queue = [];
-    this.status = 'bleed';
 
     console.log('New Diamond object created');
 };
@@ -198,34 +208,45 @@ Diamond.prototype.addContent = function(content_item) {
 };
 
 // Move the diamond to the goal location
-Diamond.prototype.moveTo = function(goal_x, goal_y, rate = 1) {
-    this.rate = rate;
+Diamond.prototype.moveTo = function(goal_x, goal_y, velocity = 5) {
+    this.status_queue.push('move');
+
+    // NOTE: origin_x and origin_y should never be negative. May have to implement some safeguards.
+
     this.progress_x = 0;
     this.progress_y = 0;
-    this.end_x = Math.abs(goal_x);
-    this.end_y = Math.abs(goal_y);
+    this.destination_x = Math.abs(goal_x - this.origin_x);
+    this.destination_y = Math.abs(goal_y - this.origin_y);
+
+    this.dest_x_reached = false;
+    this.dest_y_reached = false;
 
     // time to incorporate some (very simple) physics!
-    var velocity = 5;
-    var distance_x = Math.abs(this.end_x);
-    var distance_y = Math.abs(this.end_y);
-    var angle = Math.atan(distance_y/distance_x);
-    this.velocity_x = velocity * Math.sin(angle);
-    this.velocity_y = velocity * Math.cos(angle);
-
-    // TODO: search for a more elegant solution...
-    if (this.end_x < 0) {
-        this.move_x_sign = -1;
-    } else {
-        this.move_x_sign = 1;
+    if (this.destination_x > 0 && this.destination_y > 0) {
+        var angle = Math.atan(this.destination_y/this.destination_x);
+        this.velocity_x = velocity * Math.sin(angle);
+        this.velocity_y = velocity * Math.cos(angle);
+    } else if (this.destination_x == 0) {
+        this.velocity_x = 0;
+        this.velocity_y = velocity;
+    } else if (this.destination_y == 0) {
+        this.velocity_x = velocity;
+        this.velocity_y = 0;
     }
 
-    if (this.end_y < 0) {
-        this.move_y_sign = -1;
+    // Check to see whenther there will be positive or negative movement for both the x and y directions
+    if (goal_x < this.origin_x) {
+        this.direction_x = -1;
     } else {
-        this.move_y_sign = 1;
+        this.direction_x = 1;
     }
-    console.log('v: ' + velocity + '\nd_x: ' + distance_x + '\nd_y: ' + distance_y + '\na: ' + angle + '\nv_x: ' + this.velocity_x + '\nv_y: ' + this.velocity_y);
+
+    if (goal_y < this.origin_y) {
+        this.direction_y = -1;
+    } else {
+        this.direction_y = 1;
+    }
+    console.log('v: ' + velocity + '\nd_x: ' + this.destination_x + '\nd_y: ' + this.destination_y + '\na: ' + angle + '\nv_x: ' + this.velocity_x + '\nv_y: ' + this.velocity_y);
 };
 
 
@@ -348,25 +369,29 @@ Diamond.prototype.update = function() {
 
 
 // Animate change in position
-Diamond.prototype.updatePosition = function(rate = 1) {
+Diamond.prototype.updatePosition = function() {
     // make sure the diamond is not drawn at a further position than desired
-    if (this.progress_x > this.end_x) {
-        this.progress_x = this.end_x;
+    if (this.progress_x >= this.destination_x) {
+        this.progress_x = this.destination_x;
+        this.dest_x_reached = true;
     }
-    if (this.progress_y > this.end_y) {
-        this.progress_y = this.end_y;
+    if (this.progress_y >= this.destination_y) {
+        this.progress_y = this.destination_y;
+        this.dest_y_reached = true;
     }
 
-    // each position and respective origin value will be affected equally
-    if (this.progress_x < this.end_x && this.progress_y < this.end_y) {
-        this.progress_x += this.velocity_x * rate;
-        this.progress_y += this.velocity_y * rate;
-        this.origin_x += this.velocity_x * this.move_x_sign;
-        this.origin_y += this.velocity_y * this.move_y_sign;
-        console.log('new_origin: (' + this.origin_x + ', ' + this.origin_y + ')');
-    } else {
+    // update the position change progress
+    if (this.dest_x_reached && this.dest_y_reached) {
+        this.status = 'stable';
         return;
+    } else if (!this.dest_x_reached) {
+        this.progress_x += this.velocity_x;
+        this.origin_x += this.velocity_x * this.direction_x;
+    } else if (!this.dest_y_reached) {
+        this.progress_y += this.velocity_y;
+        this.origin_y += this.velocity_y * this.direction_y;
     }
+    console.log('new_origin: (' + this.origin_x + ', ' + this.origin_y + ')');
 };
 
 
@@ -561,7 +586,6 @@ Diamond.prototype.updateElevation = function() {
     if (progress >= goal) {
         this.elevation = this.elevation_goal;
         this.status = 'stable';
-        this.status_queue.push('intro_complete');
         return;
 
     } else {
