@@ -1,55 +1,55 @@
 /**********************************************************
  *                       GAME FIELD                       *
  **********************************************************/
-var Field = function(gameType) {
+function Field(gameType) {
     this.gameType = gameType;
     this.score = 0;
     this.active_units = [];
     this.dormant_units = [[], [], [], [], [], [], [], []];
     //console.log('New ' + gameType + ' game started');
-};
+}
 
 Field.prototype.clear_data = function() {
     // clear the dormant data
-};
+}
 
 Field.prototype.floor = function() {
     // floor all dormant pieces
-};
+}
 
 Field.prototype.traverse = function() {
     // search all of the dormant data for activation units and follow through the resulting matching chains
-};
+}
 
 
 
 /**********************************************************
  *                    INDIVIDUAL UNITS                    *
  **********************************************************/
-var Unit = function(color, type, location, status) {
+function Unit(color, type, location, status) {
     this.color = color;
     this.type = type;
     this.location = location;
     this.status = status;
     //console.log('New ' + color + ' ' + type + ' piece created at ' + location[0] + ',' + location[1]);
-};
+}
 
 
 
 /**********************************************************
  *                      PAIR OF UNITS                     *
  **********************************************************/
-var Pair = function(units) {
+function Pair(units) {
     this.units = units;
     //console.log('New pair created: ' + units[0].color + ',' + units[1].color);
-};
+}
 
 
 
 /**********************************************************
  *                        MENU ITEM                       *
  **********************************************************/
-var MenuItem = function(name, avail, action) {
+function MenuItem(name, avail, action) {
     this.name = name;
     this.availability = avail;
     this.action = action;
@@ -93,7 +93,7 @@ MenuItem.prototype.createDiv = function(group) {
 /**********************************************************
  *                          MENU                          *
  **********************************************************/
-var Menu = function(group, items) {
+function Menu(group, items) {
     this.menu_name = group;
     this.menu_items = items;
     this.amount = items.length;
@@ -104,7 +104,7 @@ var Menu = function(group, items) {
     });
 
     //console.log('New Menu created');
-};
+}
 
 // display the menu object
 Menu.prototype.display = function() {
@@ -127,14 +127,14 @@ Menu.prototype.display = function() {
     $('#' + menu_div.id).animate({
         opacity: 1.0
     }, 1000);
-};
+}
 
 
 
 /**********************************************************
  *                          TITLE                         *
  **********************************************************/
-var Title = function(id, title) {
+function Title(id, title) {
     this.title = title;
     this.id = 'title_' + id;
 
@@ -145,7 +145,7 @@ var Title = function(id, title) {
     this.div.style.opacity = 0.0;
 
     //console.log('New Title created');
-};
+}
 
 Title.prototype.display = function() {
     //console.log('displaying title...');
@@ -155,4 +155,4 @@ Title.prototype.display = function() {
     $('#' + this.id).animate({
         opacity: 1.0
     }, 1000);
-};
+}
