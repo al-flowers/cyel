@@ -1,9 +1,9 @@
 # cyel (working title)
+Cyel is a relatively simple HTML5 canvas based game inspired by puzzle fighter and various puzzle fighter-like games.
 NOTE: As impractical as it may be, this project is being built mostly from scratch. That is all.
 
 ## Running the project locally
-NOTE: The project will soon run on hosted website
-Simply run a local http server in the cyel/ directory and access cyel.html through the localhost.
+The project will eventually be running on a hosted website. In the meantime, run a local http server in the cyel/ directory and access cyel.html through the localhost.
 
 Example Method:
 1. Install the http-server package following the directions at  https://www.npmjs.com/package/http-server.
