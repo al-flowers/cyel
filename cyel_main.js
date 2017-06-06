@@ -49,7 +49,7 @@ $(function() {
     // main menu and title
     var title = new Title('Main', 'c y e l');
     var main_continue = new MenuItem('continue', false, null);
-    var main_new_game = new MenuItem('new game', true, practiceSequence02);
+    var main_new_game = new MenuItem('new game', true, practiceSequence00);
     var main_leaderboard = new MenuItem('leaderboard', false, null);
     var main_settings = new MenuItem('settings', false, null);
     menu = new Menu('Main', [main_continue, main_new_game, main_leaderboard, main_settings]);
@@ -72,6 +72,13 @@ $(function() {
 //          the 'initiate' text.
 function startGame() {
 
+}
+
+function practiceSequence00() {
+    var test_diamond01 = new Diamond('test01', 640, 360, 60);
+    animator.addObject('test01', test_diamond01);
+
+    animator.animation_objects['test01'].move('test01_move', 200, 200, 2);
 }
 
 function practiceSequence01() {
@@ -141,7 +148,7 @@ function practiceSequence01() {
 
     var diamond_count = row_count * row_count;
 
-    //animator.ani_objects['title'].resize(board_size/2, 15, true);
+    //animator.animation_objects['title'].resize(board_size/2, 15, true);
 
     nd0 = new Diamond('nd0', start_x1, start_y1, diamond_size_start);
     nd1 = new Diamond('nd1', start_x2, start_y2, diamond_size_start);
@@ -163,15 +170,15 @@ function practiceSequence01() {
     animator.addObject('nd2', nd2);
     animator.addObject('nd3', nd3);
 
-    animator.ani_objects['nd0'].rotate(90, 8);
-    animator.ani_objects['nd1'].rotate(90, 8);
-    animator.ani_objects['nd2'].rotate(90, 8);
-    animator.ani_objects['nd3'].rotate(90, 8);
+    animator.animation_objects['nd0'].rotate(90, 8);
+    animator.animation_objects['nd1'].rotate(90, 8);
+    animator.animation_objects['nd2'].rotate(90, 8);
+    animator.animation_objects['nd3'].rotate(90, 8);
 
-    animator.ani_objects['nd0'].move(goal_x1, goal_y1, diamond_speed, true);
-    animator.ani_objects['nd1'].move(goal_x2, goal_y2, diamond_speed, true);
-    animator.ani_objects['nd2'].move(goal_x3, goal_y3, diamond_speed, true);
-    animator.ani_objects['nd3'].move(goal_x4, goal_y4, diamond_speed, true);
+    animator.animation_objects['nd0'].move(goal_x1, goal_y1, diamond_speed, true);
+    animator.animation_objects['nd1'].move(goal_x2, goal_y2, diamond_speed, true);
+    animator.animation_objects['nd2'].move(goal_x3, goal_y3, diamond_speed, true);
+    animator.animation_objects['nd3'].move(goal_x4, goal_y4, diamond_speed, true);
 
     for (var i = 4; i < diamond_count; i++) {
         var new_diamond;
@@ -184,8 +191,8 @@ function practiceSequence01() {
                 new_diamond = new Diamond('nd' + i, start_x1, start_y1, diamond_size_start);
                 new_diamond.setColor(color1, color1);
                 animator.addObject("nd" + i, new_diamond, "nd" + (i-4));
-                animator.ani_objects['nd' + i].rotate(90, 8);
-                animator.ani_objects['nd' + i].move(goal_x1, goal_y1, diamond_speed, true);
+                animator.animation_objects['nd' + i].rotate(90, 8);
+                animator.animation_objects['nd' + i].move(goal_x1, goal_y1, diamond_speed, true);
 
 
                 break;
@@ -196,8 +203,8 @@ function practiceSequence01() {
                 new_diamond = new Diamond('nd' + i, start_x2, start_y2, diamond_size_start);
                 new_diamond.setColor(color2, color2);
                 animator.addObject("nd" + i, new_diamond, "nd" + (i-4));
-                animator.ani_objects['nd' + i].rotate(90, 8);
-                animator.ani_objects['nd' + i].move(goal_x2, goal_y2, diamond_speed, true);
+                animator.animation_objects['nd' + i].rotate(90, 8);
+                animator.animation_objects['nd' + i].move(goal_x2, goal_y2, diamond_speed, true);
                 break;
             case 2:
                 //console.log("dn" + i + " created. predecessor = nd" + (i-4) + ".");
@@ -206,8 +213,8 @@ function practiceSequence01() {
                 new_diamond = new Diamond('nd' + i, start_x3, start_y3, diamond_size_start);
                 new_diamond.setColor(color3, color3);
                 animator.addObject("nd" + i, new_diamond, "nd" + (i-4));
-                animator.ani_objects['nd' + i].rotate(90, 8);
-                animator.ani_objects['nd' + i].move(goal_x3, goal_y3, diamond_speed, true);
+                animator.animation_objects['nd' + i].rotate(90, 8);
+                animator.animation_objects['nd' + i].move(goal_x3, goal_y3, diamond_speed, true);
                 break;
             case 3:
                 //console.log("dn" + i + " created. predecessor = nd" + (i-4) + ".");
@@ -216,8 +223,8 @@ function practiceSequence01() {
                 new_diamond = new Diamond('nd' + i, start_x4, start_y4, diamond_size_start);
                 new_diamond.setColor(color4, color4);
                 animator.addObject("nd" + i, new_diamond, "nd" + (i-4));
-                animator.ani_objects['nd' + i].rotate(90, 8);
-                animator.ani_objects['nd' + i].move(goal_x4, goal_y4, diamond_speed, true);
+                animator.animation_objects['nd' + i].rotate(90, 8);
+                animator.animation_objects['nd' + i].move(goal_x4, goal_y4, diamond_speed, true);
 
                 line_limit -= 1;
 

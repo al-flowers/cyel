@@ -10,7 +10,12 @@ function Action(action, action_id, goal, rate = 1) {
     this.action_id = action_id;
     this.paused = false;
     this.is_complete = false; // This may become useless if the action is simply removed from the action set upon completion
+    this.carryover = false;
     switch (action) {
+        case 'display_content':
+            this.level = goal;
+            this.rate = rate;
+            break;
         case 'draw_border':
             this.long_destination = goal;                   // The entire edge length
             this.short_destination = Math.ceil(goal/2);     // Roughly half of the entire edge length
@@ -36,40 +41,33 @@ function Action(action, action_id, goal, rate = 1) {
             // destination_x, destination_y, velocity_x, velocity_y
             // direction_x, direction_y, progress_x, progress_y
             // reached_x, reached_y
-            // if 'goal' is not an array then either a goal wasn't specified or it was specified incorrectly
+            // In this case 'goal' is an array consisting of [goal_x, goal_y]
             if (Array.isArray(goal)) {
-                this.destination_x = Math.abs(goal[0]);
-                this.destination_y = Math.abs(goal[1]);
+                this.destination_x = goal[0];
+                this.destination_y = goal[1];
             } else {
                 this.destination_x = 0;
                 this.destination_y = 0;
                 goal = [0, 0];
             }
 
-            // time to incorporate some (very simple) physics!
-            if (this.destination_x > 0 && this.destination_y > 0) {
-                var angle = Math.atan(this.destination_y/this.destination_x);
-                this.velocity_x = rate * Math.cos(angle);
-                this.velocity_y = rate * Math.sin(angle);
-            } else if (this.destination_x == 0) {
+            // In this case 'rate' is an array consisting of [velocity, direction_x, direction_y]
+            if (Array.isArray(rate)) {
+                this.direction_x = rate[1];
+                this.direction_y = rate[2];
+                this.velocity_x = rate[0];
+                this.velocity_y = rate[0];
+            } else {
+                this.direction_x = 1;
+                this.direction_y = 1;
                 this.velocity_x = 0;
-                this.velocity_y = rate;
-            } else if (this.destination_y == 0) {
-                this.velocity_x = rate;
                 this.velocity_y = 0;
             }
 
-            if (goal[0] >= 0) {
-                this.direction_x = 1;
-            } else {
-                this.direction_x = -1;
-            }
-
-            if (goal[1] >= 0) {
-                this.direction_y = 1;
-            } else {
-                this.direction_y = -1;
-            }
+            // Separate the movement rate into a horizontal velocity and a vertical velocity
+            var angle = Math.atan(Math.abs(this.destination_y)/Math.abs(this.destination_x));
+            this.velocity_x = this.velocity_x * Math.cos(angle);
+            this.velocity_y = this.velocity_y * Math.sin(angle);
 
             this.progress_x = 0;
             this.progress_y = 0;
@@ -132,13 +130,13 @@ function ActionSet(set_id, predecessor_id = null) {
 }
 
 ActionSet.prototype.appendAction = function(action) {
-    console.log("appending action...");
-    console.log(action);
+    console.log("appending action with id: " + action.action_id);
     this.action_ids.push(action.action_id);
     this.actions[action.action_id] = action;
 }
 
 ActionSet.prototype.removeAction = function(action_id) {
+    console.log("removing action with id: " + action_id);
     var index = this.action_ids.indexOf(action_id);
     this.action_ids.splice(index, 1);
     delete this.actions[action_id];

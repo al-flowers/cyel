@@ -1,4 +1,4 @@
-/**********************************************************/
+this.center/**********************************************************/
 /*                     DIAMOND OBJECT                     */
 /**********************************************************/
 
@@ -18,8 +18,8 @@ function Diamond(id, x_position, y_position, size, intro_rate = 1) {
 
     // Position variables
     // NOTE: The origin refers to the center of the diamond (not the center of the canvas)
-    this.origin_x = x_position;
-    this.origin_y = y_position;
+    this.center_x = x_position;
+    this.center_y = y_position;
     this.angle = 0;
     this.elevation = 0;
 
@@ -48,7 +48,7 @@ Diamond.prototype = Object.create(AnimatableObject.prototype);
 // Draw the diamond object shape
 Diamond.prototype.drawObject = function() {
     draw.save();
-    draw.translate(this.origin_x, this.origin_y);
+    draw.translate(this.center_x, this.center_y);
     draw.rotate(this.angle * Math.PI/180);
 
     // Draw the blank shape with just a border
@@ -89,7 +89,7 @@ Diamond.prototype.drawShadow = function() {
     var shadow_dist = this.elevation * 0.05;
 
     draw.save();
-    draw.translate(this.origin_x - shadow_dist, this.origin_y);
+    draw.translate(this.center_x - shadow_dist, this.center_y);
     draw.rotate(this.angle * Math.PI/180);
 
     // draw main shadow block
@@ -128,7 +128,7 @@ Diamond.prototype.linkContent = function(content_item) {
 }
 
 // Make the Diamond appear using an intro animation
-Diamond.prototype.intro = function(action_id, velocity, elevation_distance, activate_dependents = false) {
+Diamond.prototype.intro = function(action_id, velocity, elevation_distance) {
     if (this.is_visible) {
         console.error("Diamond with id '" + this.id + "' is already visible on the field.");
         return;
@@ -146,19 +146,42 @@ Diamond.prototype.intro = function(action_id, velocity, elevation_distance, acti
     this.assignAction(initial_elevate);
     this.closeActionSet();
 
+    this.beginActionSet(action_id + '_step_3');
+    var display_content = new Action('display_content', action_id + '_display_content', 1.0, 1000);
+    this.assignAction(display_content);
+    this.closeActionSet();
+
+    this.getActionSet();
 }
 
 // Make the Dimaond disappear using an outro animation (a reverse version of the intro animation)
 
-// Move the diamond to the goal location
-Diamond.prototype.move = function(action_id, goal_x, goal_y, velocity, activate_dependents = false) {
-    var new_action = new Action('move', action_id, [goal_x - this.origin_x, goal_y - this.origin_y], velocity);
-    this.assignAction(new_Action);
+// Move the diamond to the goal location (Absolute location)
+Diamond.prototype.move = function(action_id, goal_x, goal_y, velocity, carryover = false) {
+    // Simulate having the center of the diamond as the origin of a new coordinate plane
+    var pseudo_goal_x = goal_x - this.center_x;
+    var pseudo_goal_y = goal_y - this.center_y;
+
+    // Using a 1 or -1, set whether the x and y-coordinates will increase or decreatse with the position change
+    var x_direction = 1;
+    var y_direction = 1;
+    if (goal_x < this.center_x) {
+        x_direction = -1;
+    }
+    if (goal_y < this.center_y) {
+        y_direction = -1;
+    }
+    var move = new Action('move', action_id, [pseudo_goal_x, pseudo_goal_y], [velocity, x_direction, y_direction]);
+    move.actual_destination_x = goal_x;
+    move.actual_destination_y = goal_y;
+    move.carryover = carryover;
+
+    this.assignAction(move);
 }
 
 
 // NOTE: size cannot be reduced to a value less than 0
-Diamond.prototype.resize = function(action_id, new_size, rate, activateChildren = false) {
+Diamond.prototype.resize = function(action_id, new_size, rate, carryover = false) {
     if (new_size < 0) {
         console.error('Diamond size cannot be lower than 0');
         return;
@@ -177,7 +200,7 @@ Diamond.prototype.resize = function(action_id, new_size, rate, activateChildren 
 
 // Raise or lower the Diamond object by changing the object size and shadow width/intensity
 // NOTE: elevation cannot be reduced to a value less than 0
-Diamond.prototype.elevate = function(new_elevation, rate, activateChildren = false) {
+Diamond.prototype.elevate = function(new_elevation, rate, carryover = false) {
     this.status_queue.push('elevate');
     this.elevation_modifier = rate;
 
@@ -200,7 +223,7 @@ Diamond.prototype.elevate = function(new_elevation, rate, activateChildren = fal
 
 // Rotate the entire diamond by the specified angle (degrees)
 // Negative angle -> clockwise; positive angle -> counter-clockwise
-Diamond.prototype.rotate = function(angle, rate, activateChildren = false) {
+Diamond.prototype.rotate = function(angle, rate, carryover = false) {
     this.rotation_goal = angle;
     this.rotation_modifier = rate;
 
@@ -215,14 +238,9 @@ Diamond.prototype.rotate = function(angle, rate, activateChildren = false) {
 
 
 // Display the associated div content
-Diamond.prototype.displayContent = function() {
-    if (!this.menu_loaded && this.elevation > this.elevation_goal/2) {
-        // Display diamond content (e.g. titles, menus, etc.)
-        this.content.forEach(function(item) {
-            item.display();
-        });
-        this.menu_loaded = true;
-    }
+Diamond.prototype.displayContent = function(rate, opacity = 1.0) {
+    var display_content = new Action('display_content', action_id + 'display_content', opacity, rate);
+    this.assignAction(display_content);
 }
 
 
@@ -249,7 +267,7 @@ Diamond.prototype.updateAction = function(action) {
         case 'outro':
             modified_action = this.updateOutro(action);
             break;
-        case 'content':
+        case 'display_content':
             modified_action = this.updateContent(action);
             break;
         case 'move':
@@ -265,46 +283,59 @@ Diamond.prototype.updateAction = function(action) {
             modified_action = this.updateRotation(action);
             break;
         default:
-            console.error("The Diamond '" + this.id + "' cannot perform the action '" + action + "'.");
+            console.error("The Diamond '" + this.id + "' cannot perform the action '" + action.id + "'.");
     }
     return modified_action;
 }
 
 
-// TODO: URGENT/NEXTSTEP: integrate the action object into each of the update functions
+// Animate the DOM content associated with the diamond. Animation method will be determined by each content item
+// TODO: consider removing this method if ultimately useless
+Diamond.prototype.updateContent = function(action) {
+    //console.log("displaying content...");
+
+    if (!this.items_loaded) {
+        this.content.forEach(function(item) {
+            item.display(action.rate, action.level);
+        });
+        this.items_loaded = true;
+        action.complete();
+    }
+
+    return action;
+}
 
 
 // Animate change in position
 Diamond.prototype.updatePosition = function(action) {
-    console.log("updating position...");
+    //console.log("updating position...");
 
     // make sure the diamond is not drawn at a further position than desired
-    if (action.progress_x >= action.destination_x) {
+    if (action.progress_x * action.direction_x >= action.destination_x * action.direction_x) {
         action.progress_x = action.destination_x;
-        this.origin_x = action.goal_x;
+        this.center_x = action.actual_destination_x;
         action.reached_x = true;
     }
-    if (action.progress_y >= action.destination_y) {
+
+    if (action.progress_y * action.direction_y >= action.destination_y * action.direction_y) {
         action.progress_y = action.destination_y;
-        this.origin_y = action.goal_y;
+        this.center_y = action.actual_destination_y;
         action.reached_y = true;
     }
 
-    //console.log('current_origin: (' + this.origin_x + ', ' + this.origin_y + ')');
-
     // update the position change progress
     if (action.reached_x && action.reached_y) {
-        this.completeAction(action.action_id); // as of right now this simply removes the action from the current action set
-        return;
+        action.complete();
     }
     if (!action.reached_x) {
-        action.progress_x += action.velocity_x;
-        this.origin_x += action.velocity_x * action.direction_x;
+        action.progress_x += action.velocity_x * action.direction_x;
+        this.center_x += action.velocity_x * action.direction_x;
     }
     if (!this.reached_y) {
-        action.progress_y += action.velocity_y;
-        this.origin_y += action.velocity_y * action.direction_y;
+        action.progress_y += action.velocity_y * action.direction_y;
+        this.center_y += action.velocity_y * action.direction_y;
     }
+    // TODO: Check for performance difference if the directions are baked into the respective velocities
 
     return action;
 }
@@ -312,7 +343,7 @@ Diamond.prototype.updatePosition = function(action) {
 
 // 'fade/bleed-in' animation for the diamond outline
 Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
-    console.log("updating border draw...");
+    //console.log("updating border draw...");
 
     action.draw_border_complete = true; // this will become false if the diamond isn't fully visible yet
     for (var i=0; i < 7; i++) {
@@ -322,14 +353,11 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
             action.draw_border_complete = false;
         }
     }
-
-    // console.log("border draw complete? " + action.draw_border_complete);
-    // console.log("sections_complete? " + action.section_complete);
-
+    
     // Top Left Quadrant (2/2)
     if (!action.section_complete[0]) {
         draw.save();
-        draw.translate(this.origin_x - (this.size/2 + 2), this.origin_y - (this.size/2 + 2));
+        draw.translate(this.center_x - (this.size/2 + 2), this.center_y - (this.size/2 + 2));
         draw.rotate(315 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -342,7 +370,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
     // Top Right Quadrant (1/1)
     if (!action.section_complete[1]) {
         draw.save();
-        draw.translate(this.origin_x, this.origin_y - (this.size + 2));
+        draw.translate(this.center_x, this.center_y - (this.size + 2));
         draw.rotate(45 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -357,7 +385,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
     // Bottom Right Quadrant (1/2)
     if (!action.section_complete[2]) {
         draw.save();
-        draw.translate(this.origin_x + (this.size + 2), this.origin_y);
+        draw.translate(this.center_x + (this.size + 2), this.center_y);
         draw.rotate(135 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -372,7 +400,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
     // Bottom Right Quadrant (2/2)
     if (!action.section_complete[3]) {
         draw.save();
-        draw.translate(this.origin_x + (this.size/2 + 2), this.origin_y + (this.size/2 + 2));
+        draw.translate(this.center_x + (this.size/2 + 2), this.center_y + (this.size/2 + 2));
         draw.rotate(135 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -385,7 +413,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
     // Bottom Left Quadrant (1/2)
     if (!action.section_complete[4]) {
         draw.save();
-        draw.translate(this.origin_x, this.origin_y + (this.size + 2));
+        draw.translate(this.center_x, this.center_y + (this.size + 2));
         draw.rotate(225 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -398,7 +426,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
     // Bottom Left Quadrant (2/2)
     if (!action.section_complete[5]) {
         draw.save();
-        draw.translate(this.origin_x - (this.size/2 + 2), this.origin_y + (this.size/2 + 2));
+        draw.translate(this.center_x - (this.size/2 + 2), this.center_y + (this.size/2 + 2));
         draw.rotate(225 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -413,7 +441,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
     // Top Left Quadrant (1/2)
     if (!action.section_complete[6]) {
         draw.save();
-        draw.translate(this.origin_x - (this.size + 2), this.origin_y);
+        draw.translate(this.center_x - (this.size + 2), this.center_y);
         draw.rotate(315 * Math.PI/180);
         draw.beginPath();
         draw.fillStyle = action.border_cover_color;
@@ -434,7 +462,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
 
 // Animate color fill
 Diamond.prototype.updateFill = function(action, reverse = false) {
-    console.log("updating diamond fill...");
+    //console.log("updating diamond fill...");
 
     // TODO: implement the reverse process (should mainly involve enclosing everything within an 'if' statement)
 
@@ -462,7 +490,7 @@ Diamond.prototype.updateFill = function(action, reverse = false) {
 
 // Animate change in elevation
 Diamond.prototype.updateElevation = function(action) {
-    console.log("updating elevation...");
+    //console.log("updating elevation...");
 
     var progress = action.elevation_progress * action.elevation_direction;
     var goal = action.elevation_goal * action.elevation_direction;
@@ -486,7 +514,7 @@ Diamond.prototype.updateElevation = function(action) {
 
 // Animate change in size
 Diamond.prototype.updateSize = function(action) {
-    console.log("updating size");
+    //console.log("updating size");
 
     if (this.size_progress > this.size_goal) {
         this.size_progress = this.size_goal;
@@ -504,7 +532,7 @@ Diamond.prototype.updateSize = function(action) {
 
 // Animate rotation of diamond
 Diamond.prototype.updateRotation = function(action) {
-    console.log("updating rotation");
+    //console.log("updating rotation");
 
     var progress = this.angle * this.rotation_direction;
     var goal = this.rotation_goal * this.rotation_direction;

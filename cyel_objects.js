@@ -107,7 +107,8 @@ function Menu(group, items) {
 }
 
 // display the menu object
-Menu.prototype.display = function() {
+// rate is in milliseconds and level is a value between 0 and 1.0 inclusive
+Menu.prototype.display = function(rate, level) {
     //console.log('displaying menu...');
 
     // the menu div will hold all of the menu items
@@ -125,8 +126,8 @@ Menu.prototype.display = function() {
     document.getElementById('main_div').appendChild(menu_div);
     // fade in the menu items
     $('#' + menu_div.id).animate({
-        opacity: 1.0
-    }, 1000);
+        opacity: level
+    }, rate);
 }
 
 
@@ -147,12 +148,12 @@ function Title(id, title) {
     //console.log('New Title created');
 }
 
-Title.prototype.display = function() {
+Title.prototype.display = function(rate, level) {
     //console.log('displaying title...');
 
     document.getElementById('main_div').appendChild(this.div);
 
     $('#' + this.id).animate({
-        opacity: 1.0
-    }, 1000);
+        opacity: level
+    }, rate);
 }

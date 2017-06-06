@@ -7,6 +7,8 @@
  * Each canvas should only require one Animator.
  */
 
+ // TODO: find a way to manipulate items in animation_objects without directly accessing the associative array
+
 function Animator(canvas) {
     this.animation_queue = [];      //Queue containing the id of each object that is currently being animated
     this.animation_objects = {};    //Associative array containing all animatable objects that exist within the game
@@ -42,45 +44,6 @@ Animator.prototype.animate = function() {
     window.requestAnimationFrame(() => this.animate());
 
     return;
-
-
-    // // draw all object shadows in one layer
-    // this.animation_queue.forEach((object_id) => {
-    //     if (this.animation_objects[this.predecessor[object_id]]) {
-    //         parent_complete = this.animation_objects[this.predecessor[object_id]].activate_children;
-    //     } else {
-    //         parent_complete = true;
-    //     }
-    //     if (this.animation_objects[object_id]) {
-    //         if (parent_complete) {
-    //             this.animation_objects[object_id].drawShadow();
-    //         }
-    //     } else {
-    //         console.log("object with id \'" + title + "\' doesn't exist. sorry pal.");
-    //         return;
-    //     }
-    //
-    // });
-
-    // // draw all objects in a layer over the object shadows and update the object's attributes
-    // this.animation_queue.forEach((object_id) => {
-    //     if (this.animation_objects[this.predecessor[object_id]]) {
-    //         parent_complete = this.animation_objects[this.predecessor[object_id]].activate_children;
-    //     } else {
-    //         parent_complete = true;
-    //     }
-    //     if (this.animation_objects[object_id]) {
-    //         if (parent_complete) {
-    //             this.animation_objects[object_id].drawObject();
-    //             this.animation_objects[object_id].update();
-    //         }
-    //     } else {
-    //         console.log("object with id \'" + title + "\' doesn't exist. sorry pal.");
-    //         return;
-    //     }
-    //
-    // });
-
 }
 
 
@@ -104,22 +67,31 @@ function AnimatableObject(id) {
 
 // Facilitate the object's animation by updating physical attributes and the list of actions
 AnimatableObject.prototype.update = function() {
-    //console.log("updating next frame for object '" + this.id + "'");
+    /* TODO: implement the carryover function by checking all actions for a carryover value and
+     * using the carryover() method once all of the current actions have a carryover value
+     * set to 'true'. Remember to only carryover when there is another action set in the queue. */
+
     if (!this.current_action_set || this.current_action_set.isComplete()) {
         this.getActionSet();
     }
     // It is still possible for the current_action_set to be undefined if the action_queue is empty
     if (this.current_action_set) {
+        var trash_actions = [];
         this.current_action_set.action_ids.forEach((action_id) => {
             var current_action = this.current_action_set.actions[action_id];
             if (!current_action.paused) {
                 // The updateAction method shall return an updated Action object
                 this.current_action_set.actions[action_id] = this.updateAction(current_action);
-                // Remove any completed actions from the current_action_set
+                // Stage any completed actions from the current_action_set for deletion
                 if (this.current_action_set.actions[action_id].isComplete()) {
-                    this.current_action_set.removeAction(action_id);
+                    trash_actions.push(action_id);
                 }
             }
+        });
+
+        // Remove any completed actions from the current_action_set
+        trash_actions.forEach((action_id) => {
+            this.current_action_set.removeAction(action_id);
         });
     }
 }
@@ -134,6 +106,7 @@ AnimatableObject.prototype.beginActionSet = function(set_id, predecessor_id = nu
 AnimatableObject.prototype.assignAction = function(action) {
     // An action hold indicates that a new action set is being built for future execution
     // Otherwise, the action shall be executed immediately by joining the current_action_set
+
     if (this.action_hold) {
         if (this.current_action_build) {
             this.current_action_build.appendAction(action);
@@ -141,6 +114,8 @@ AnimatableObject.prototype.assignAction = function(action) {
             console.error("Something went terribly wrong. This error should not appear.");
         }
     } else {
+        // console.log("current action set...");
+        // console.log(this.current_action_set);
         if (!this.current_action_set) {
             this.current_action_set = new ActionSet(this.id + '_new_action_set');
         }
@@ -165,9 +140,11 @@ AnimatableObject.prototype.clearActionQueue = function() {
     this.action_queue = [];
 }
 
-// Stop and remove the current_action_set
+// Stop and remove all actions
 AnimatableObject.prototype.stop = function() {
     delete this.current_action_set;
+    this.action_queue = [];
+
 }
 
 // Pause the all actions in the current_action_set or a specific action if specified
@@ -192,10 +169,12 @@ AnimatableObject.prototype.resume = function(action_id = null) {
     }
 }
 
-// Set an action as complete
-// TODO: consider removing this... idk yet
-AnimatableObject.prototype.completeAction = function(action_id) {
-    this.current_action_set.removeAction(action_id);
+// Carryover all of the actions in the current action set into the next action set in the queue and remove the current action set
+AnimatableObject.prototype.carryover = function() {
+    this.current_action_set.action_ids.forEach((action_id) => {
+        this.action_queue[0].appendAction(this.current_action_set.actions[action_id]);
+    });
+    delete this.current_action_set;
 }
 
 // Make sure that every AnimatableObject is of a more specific object type (e.g. Diamond)...for now
