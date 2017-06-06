@@ -75,10 +75,11 @@ function startGame() {
 }
 
 function practiceSequence00() {
-    var test_diamond01 = new Diamond('test01', 640, 360, 60);
+    var test_diamond01 = new Diamond('test01', 1080, 200, 60);
+    test_diamond01.setColor("rgb(126, 126, 126)", "rgb(126, 126, 126)");
     animator.addObject('test01', test_diamond01);
 
-    animator.animation_objects['test01'].move('test01_move', 200, 200, 2);
+    animator.animation_objects['test01'].move('test01_move', 200, 200, 5, true);
 }
 
 function practiceSequence01() {

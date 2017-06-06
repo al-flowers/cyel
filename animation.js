@@ -7,8 +7,8 @@
  * Each canvas should only require one Animator.
  */
 
- // TODO: find a way to manipulate items in animation_objects without directly accessing the associative array
-
+// TODO: Find a way to manipulate items in animation_objects without directly accessing the associative array
+// TODO: Find an efficient way to display objects in ascending order by their elevations (if possible...being efficient, that is)
 function Animator(canvas) {
     this.animation_queue = [];      //Queue containing the id of each object that is currently being animated
     this.animation_objects = {};    //Associative array containing all animatable objects that exist within the game
@@ -34,6 +34,11 @@ Animator.prototype.removeObject = function(id) {
 */
 Animator.prototype.animate = function() {
     draw.clearRect(0, 0, dimension_x, dimension_y);
+
+    // Draw the shadows of all queued animatable objects
+    this.animation_queue.forEach((object_id) => {
+        this.animation_objects[object_id].drawShadow();
+    });
 
     // Draw all queued animatable objects
     this.animation_queue.forEach((object_id) => {
@@ -67,21 +72,26 @@ function AnimatableObject(id) {
 
 // Facilitate the object's animation by updating physical attributes and the list of actions
 AnimatableObject.prototype.update = function() {
-    /* TODO: implement the carryover function by checking all actions for a carryover value and
-     * using the carryover() method once all of the current actions have a carryover value
-     * set to 'true'. Remember to only carryover when there is another action set in the queue. */
+    var carryover = true;
 
     if (!this.current_action_set || this.current_action_set.isComplete()) {
         this.getActionSet();
     }
     // It is still possible for the current_action_set to be undefined if the action_queue is empty
     if (this.current_action_set) {
+        var carryover = true;
         var trash_actions = [];
         this.current_action_set.action_ids.forEach((action_id) => {
             var current_action = this.current_action_set.actions[action_id];
+            // The current_action may disqualify the entire action set from carrying over into the next action set
+            if (!current_action.carryover) {
+                carryover = false;
+            }
+
             if (!current_action.paused) {
                 // The updateAction method shall return an updated Action object
                 this.current_action_set.actions[action_id] = this.updateAction(current_action);
+
                 // Stage any completed actions from the current_action_set for deletion
                 if (this.current_action_set.actions[action_id].isComplete()) {
                     trash_actions.push(action_id);
@@ -93,6 +103,14 @@ AnimatableObject.prototype.update = function() {
         trash_actions.forEach((action_id) => {
             this.current_action_set.removeAction(action_id);
         });
+
+        // If elegible, carry over all of the current actions into the next queued action set
+        if (carryover && this.action_queue[0]) {
+            this.current_action_set.action_ids.forEach((action_id) => {
+                this.action_queue[0].appendAction(this.current_action_set.actions[action_id]);
+            });
+            delete this.current_action_set;
+        }
     }
 }
 

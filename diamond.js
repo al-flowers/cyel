@@ -1,4 +1,4 @@
-this.center/**********************************************************/
+/**********************************************************/
 /*                     DIAMOND OBJECT                     */
 /**********************************************************/
 
@@ -14,7 +14,7 @@ function Diamond(id, x_position, y_position, size, intro_rate = 1) {
     this.border = "rgb(70, 70, 70)";
     this.fill = "rgb(256, 256, 256)";
     this.content = [];
-    this.activate_dependents = false; //TODO: revisit
+    this.mobile = false;
 
     // Position variables
     // NOTE: The origin refers to the center of the diamond (not the center of the canvas)
@@ -59,14 +59,8 @@ Diamond.prototype.drawObject = function() {
     draw.lineTo(-(this.size), 0);
     draw.lineTo(0, -(this.size));
     draw.lineWidth = 0.7;
-    draw.shadowBlur = this.elevation;
-    draw.shadowColor = "rgb(100, 100, 100)";
-    draw.shadowOffsetX = this.elevation;
-    draw.shadowOffsetY = this.elevation/2;
     draw.strokeStyle = this.border;
-    draw.fillStyle = "rgb(256, 256, 256)";
     draw.stroke();
-    draw.fill();
     draw.closePath();
 
     // Draw the fill
@@ -83,27 +77,26 @@ Diamond.prototype.drawObject = function() {
     draw.restore();
 }
 
-// TODO: Implement the canvas shadowblur property on the shape essentially making this function useless
+
 // Draw the shadow of the diamond object
 Diamond.prototype.drawShadow = function() {
-    var shadow_dist = this.elevation * 0.05;
-
     draw.save();
-    draw.translate(this.center_x - shadow_dist, this.center_y);
+    draw.translate(this.center_x, this.center_y);
     draw.rotate(this.angle * Math.PI/180);
 
-    // draw main shadow block
+    // Draw the blank shape with just a border
     draw.beginPath();
     draw.moveTo(0, -(this.size));
     draw.lineTo(this.size, 0);
     draw.lineTo(0, this.size);
     draw.lineTo(-(this.size), 0);
     draw.lineTo(0, -(this.size));
-    draw.lineWidth = 1;
-    //draw.strokeStyle = "rgba(160, 160, 160, 0.8)";
-    draw.fillStyle = "rgb(150, 150, 150)";
+    draw.shadowBlur = this.elevation;
+    draw.shadowColor = "rgb(100, 100, 100)";
+    draw.shadowOffsetX = this.elevation;
+    draw.shadowOffsetY = this.elevation/2;
+    draw.fillStyle = "rgba(256, 256, 256, 1)";
     draw.fill();
-    //draw.stroke();
     draw.closePath();
 
     draw.restore();
@@ -115,7 +108,7 @@ Diamond.prototype.drawShadow = function() {
 /*************************/
 
 // Set the border and fill colors for the Diamond
-Diamond.prototype.setColor = function(fill, border = false) {
+Diamond.prototype.setColor = function(fill, border = null) {
     this.fill = fill;
     if (border) {
         this.border = border;
@@ -134,6 +127,7 @@ Diamond.prototype.intro = function(action_id, velocity, elevation_distance) {
         return;
     }
     // Set up the ActionSets that shall be executed as part of the intro
+    // Draw the borders and fill the diamond
     this.beginActionSet(action_id + '_step_1');
     var draw_border = new Action('draw_border', action_id + '_border', this.edge_length, velocity);
     var fill = new Action('fill', action_id + '_fill', this.size, velocity);
@@ -153,10 +147,10 @@ Diamond.prototype.intro = function(action_id, velocity, elevation_distance) {
 
     this.getActionSet();
 }
-
-// Make the Dimaond disappear using an outro animation (a reverse version of the intro animation)
+// TODO: Make the Dimaond disappear using an outro animation (a reverse version of the intro animation)
 
 // Move the diamond to the goal location (Absolute location)
+// NOTE: a Dimaond will not move until its elevation is greater than 0.
 Diamond.prototype.move = function(action_id, goal_x, goal_y, velocity, carryover = false) {
     // Simulate having the center of the diamond as the origin of a new coordinate plane
     var pseudo_goal_x = goal_x - this.center_x;
@@ -243,6 +237,8 @@ Diamond.prototype.displayContent = function(rate, opacity = 1.0) {
     this.assignAction(display_content);
 }
 
+// TODO: make method to fade away content
+
 
 /**********************************/
 /*       Animation functions      */
@@ -290,7 +286,6 @@ Diamond.prototype.updateAction = function(action) {
 
 
 // Animate the DOM content associated with the diamond. Animation method will be determined by each content item
-// TODO: consider removing this method if ultimately useless
 Diamond.prototype.updateContent = function(action) {
     //console.log("displaying content...");
 
@@ -309,6 +304,11 @@ Diamond.prototype.updateContent = function(action) {
 // Animate change in position
 Diamond.prototype.updatePosition = function(action) {
     //console.log("updating position...");
+
+    // Hinder any movement if the diamond is not allowed to move
+    if (!this.mobile) {
+        return action;
+    }
 
     // make sure the diamond is not drawn at a further position than desired
     if (action.progress_x * action.direction_x >= action.destination_x * action.direction_x) {
@@ -353,7 +353,7 @@ Diamond.prototype.updateDrawBorder = function(action, reverse = false) {
             action.draw_border_complete = false;
         }
     }
-    
+
     // Top Left Quadrant (2/2)
     if (!action.section_complete[0]) {
         draw.save();
@@ -489,6 +489,7 @@ Diamond.prototype.updateFill = function(action, reverse = false) {
 
 
 // Animate change in elevation
+// TODO: THIS
 Diamond.prototype.updateElevation = function(action) {
     //console.log("updating elevation...");
 
@@ -508,11 +509,18 @@ Diamond.prototype.updateElevation = function(action) {
         this.fill_size = this.size;
     }
 
+    if (this.elevation > 0) {
+        this.mobile = true;
+    } else {
+        this.mobile = false;
+    }
+
     return action;
 }
 
 
 // Animate change in size
+// TODO: THIS
 Diamond.prototype.updateSize = function(action) {
     //console.log("updating size");
 
@@ -531,6 +539,7 @@ Diamond.prototype.updateSize = function(action) {
 
 
 // Animate rotation of diamond
+// TODO: THIS
 Diamond.prototype.updateRotation = function(action) {
     //console.log("updating rotation");
 
