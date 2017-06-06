@@ -5,7 +5,7 @@ NOTE: As impractical as it may be, this project is being built mostly from scrat
 ## Running the project locally
 The project will eventually be running on a hosted website. In the meantime, run a local http server in the cyel/ directory and access cyel.html through the localhost.
 
-Example Method:
+Example Method (via Mac Terminal):
 1. Install the http-server package following the directions at  https://www.npmjs.com/package/http-server.
 
 2. Run http-server in the cyel/ directory
