@@ -13,5 +13,5 @@ Example Method:
 Computer-Name:~/Documents/cyel$ http-server
 ```
 
-3. Using a web browser, go to **localhost:8080/cyel.html**.
+3. Using a web browser, go to http://localhost:8080/cyel.html.
 NOTE: The default port used by http-server is 8080.
