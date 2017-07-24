@@ -45,6 +45,77 @@ function Pair(units) {
 }
 
 
+/*********************************************************
+ *                      LIGHT MENU ITEM                  *
+ *********************************************************/
+// A menu item with light text colors meant to be used with darker backgrounds
+function lightMenuItem(name, position_x, position_y, action = null) {
+    this.name = name;
+    this.action = action;
+    this.selection = false;
+
+    // position_x and position_y correlate to coordinates over the canvas
+    this.position_x = position_x;
+    this.position_y = position_y;
+
+    // availability determines whether the item is interactive
+    if (!action) {
+        this.interactive = false;
+    } else {
+        this.interactive = true;
+    }
+
+    this.div = document.createElement('div');
+    this.div.id = this.name;
+    this.div.className = 'light_menu_item';
+    this.div.innerHTML = this.name;
+    this.div.style.opacity = 0;
+
+    var adjusted_position_x = this.position_x - 40;
+    var adjusted_position_y = this.position_y - 40;
+    this.div.style.left = adjusted_position_x + "px";
+    this.div.style.top = adjusted_position_y + "px";
+
+    if (this.interactive) {
+        this.div.style.color = "#CCCCCC";
+        $(this.div).hover(function() {
+            this.selection = true;
+            $(this).stop();
+            $(this).animate({
+                color: "#FFFFFF"
+            }, 80);
+        },
+        function() {
+            this.selection = false;
+            $(this).stop();
+            $(this).animate({
+                color: "#CCCCCC"
+            }, 80);
+        });
+        var action = this.action;
+        $(this.div).click(function() {
+            action();
+        });
+    } else {
+        this.div.style.color = "#777777";
+    }
+}
+
+lightMenuItem.prototype.display = function(rate, level) {
+    // Assign the appropriate interaction animation
+
+    document.getElementById('canvas_map').appendChild(this.div);
+    // fade in the menu item
+    $('#' + this.div.id).animate({
+        opacity: level
+    }, rate);
+}
+
+lightMenuItem.prototype.updatePosition = function(new_position_x, new_position_y) {
+    this.div.style.left = (new_position_x - 40) + "px";
+    this.div.style.top = (new_position_y - 40) + "px";
+}
+
 
 /**********************************************************
  *                        MENU ITEM                       *
@@ -68,7 +139,7 @@ MenuItem.prototype.createDiv = function(group) {
         $(this.div).hover(function() {
             $(this).stop();
             $(this).animate({
-                color: "#000000"
+                color: "#FFFFFF"
             }, 80);
         },
         function() {
@@ -82,6 +153,8 @@ MenuItem.prototype.createDiv = function(group) {
         $(this.div).click(function() {
             action();
         });
+    } else {
+        this.div.style.color = "#777777";
     }
 }
 
