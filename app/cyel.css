@@ -77,12 +77,21 @@ div.menu {
 }
 
 div.light_menu_item {
+    font-family: Quicksand;
+    font-size: 30px;
     position: absolute;
     height: 80px;
     width: 80px;
-    padding-top: 28px;
+    padding-top: 10px;
     text-align: center;
     z-index: inherit;
+
+    -webkit-transition: text-shadow 0.15s ease-in-out;
+    -moz-transition: text-shadow 0.15s ease-in-out;
+    -ms-transition: text-shadow 0.15s ease-in-out;
+    transition: text-shadow 0.15s ease-in-out;
+
+    text-shadow: 0px 0px -1px black;
 }
 
 div.menu_item {
@@ -92,4 +101,8 @@ div.menu_item {
     margin-bottom: 7px;
     text-align: center;
     opacity: inherit;
+}
+
+div.menu_item_selected {
+    text-shadow: 7px 7px 7px black;
 }

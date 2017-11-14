@@ -18,6 +18,18 @@ function Action(action, action_id, goal, rate = 1) {
             this.rate = rate;
             break;
 
+        case 'intro':
+            this.stage = 0;
+            this.action_sequence = goal;
+            break;
+
+        case 'outro':
+            this.stage = 0;
+
+            this.action_sequence = [];
+
+            break;
+
         case 'fill':
             this.progress = 0;
             this.destination = goal;
@@ -35,29 +47,23 @@ function Action(action, action_id, goal, rate = 1) {
                 goal = [0, 0];
             }
 
-            // In this case 'rate' is an array consisting of [velocity, direction_x, direction_y]
-            if (Array.isArray(rate)) {
-                this.direction_x = rate[1];
-                this.direction_y = rate[2];
-                this.velocity_x = rate[0];
-                this.velocity_y = rate[0];
-            } else {
-                this.direction_x = 1;
-                this.direction_y = 1;
-                this.velocity_x = 0;
-                this.velocity_y = 0;
-            }
+            this.velocity = rate;
 
-            // Separate the movement rate into a horizontal velocity and a vertical velocity
-            var angle = Math.atan(Math.abs(this.destination_y)/Math.abs(this.destination_x));
-            this.velocity_x = this.velocity_x * Math.cos(angle);
-            this.velocity_y = this.velocity_y * Math.sin(angle);
+            // Attributes to be initialized once the movement is initialized
+            this.velocity_x;
+            this.velocity_y;
+            this.direction_x;
+            this.direction_y;
+            this.pseudo_goal_x;
+            this.pseudo_goal_y;
+            // NOTE: The pseudo_goal attributes simulate the center of the moving object as the center of a coordinate plane
 
             this.progress_x = 0;
             this.progress_y = 0;
-
             this.reached_x = false;
             this.reached_y = false;
+            
+            this.initialized = false;
             break;
 
         case 'elevate':
@@ -85,6 +91,17 @@ function Action(action, action_id, goal, rate = 1) {
             this.progress = 0;
 
             this.initialized = false;
+            break;
+
+        case 'wait':
+            this.wait_time = goal;
+
+            this.goal_time;
+            this.progress = 0;
+
+            this.initialized = false;
+
+            this.carryover = false;
             break;
 
         default:
@@ -115,9 +132,8 @@ Action.prototype.isComplete = function() {
 /*    ACTION SET OBJECT    */
 /**************************/
 
-function ActionSet(set_id, predecessor_id = null) {
+function ActionSet(set_id) {
     this.set_id = set_id;
-    this.predecessor_id = predecessor_id;
     this.action_ids = [];
     this.actions = {};
     this.is_complete = false;

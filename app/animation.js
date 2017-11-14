@@ -12,6 +12,46 @@
 function Animator(canvas) {
     this.animation_queue = [];      //Queue containing the id of each object that is currently being animated
     this.animation_objects = {};    //Associative array containing all animatable objects that exist within the game
+    //this.wait_conditions = {};
+}
+
+
+// Begin the animator's animation loop
+Animator.prototype.animate = function() {
+    draw.clearRect(0, 0, dimension_x, dimension_y);
+
+    // Draw all queued animatable objects
+    var termination_list = [];
+    this.animation_queue.forEach((object_id) => {
+        // remove any terminated objects
+        if (this.animation_objects[object_id].isTerminated()) {
+            termination_list.push(object_id);
+        }
+        this.animation_objects[object_id].drawObject();
+        this.animation_objects[object_id].update();
+
+        // check for a wait condition
+        var wait_condition = this.animation_objects[object_id].waitingFor();
+        if (wait_condition && Array.isArray(wait_condition)) {
+            if(this.animation_objects[wait_condition[0]]
+                && this.animation_objects[wait_condition[0]].current_action_set
+                && this.animation_objects[wait_condition[0]].current_action_set.actions[wait_condition[1]]) {
+                // The wait condition has been met and can be removed from the current object
+                console.log("WAIT CONDITION MET: " + wait_condition[0] + ", " + wait_condition[1]);
+
+                this.animation_objects[object_id].clearWaitCondition();
+
+            }
+        }
+    });
+
+    termination_list.forEach((object_id) => {
+        this.removeObject(object_id);
+    });
+
+    window.requestAnimationFrame(() => this.animate());
+
+    return;
 }
 
 
@@ -39,24 +79,8 @@ Animator.prototype.removeObject = function(id) {
 
 
 // Designate a current animatable object (sub-object) as a component of another animatable object (super-object)
+// NOTE: This process is currently irreversible
 Animator.prototype.designateComponent = function(super_id, sub_id) {
     this.animation_objects[super_id].components.push(this.animation_objects[sub_id]);
     this.removeObject(sub_id);
-}
-
-
-/* TODO: Add functionality for waiting on other objects to complete a specific action (refer to github history)
-*/
-Animator.prototype.animate = function() {
-    draw.clearRect(0, 0, dimension_x, dimension_y);
-
-    // Draw all queued animatable objects
-    this.animation_queue.forEach((object_id) => {
-        this.animation_objects[object_id].drawObject();
-        this.animation_objects[object_id].update();
-    });
-
-    window.requestAnimationFrame(() => this.animate());
-
-    return;
 }

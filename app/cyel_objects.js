@@ -49,10 +49,12 @@ function Pair(units) {
  *                      LIGHT MENU ITEM                  *
  *********************************************************/
 // A menu item with light text colors meant to be used with darker backgrounds
-function lightMenuItem(name, position_x, position_y, action = null) {
+// TODO: get the first argument for setContent to work with spaces
+// TODO: horizontally and vertically center the content regardless of text size or length
+function lightMenuItem(parent_id, name, font_size, position_x, position_y, action = null) {
+    this.parent_id = parent_id;
     this.name = name;
     this.action = action;
-    this.selection = false;
 
     // position_x and position_y correlate to coordinates over the canvas
     this.position_x = position_x;
@@ -66,9 +68,10 @@ function lightMenuItem(name, position_x, position_y, action = null) {
     }
 
     this.div = document.createElement('div');
-    this.div.id = this.name;
+    this.div.id = name;
     this.div.className = 'light_menu_item';
-    this.div.innerHTML = this.name;
+    this.div.style.fontSize = font_size;
+    this.div.innerHTML = name;
     this.div.style.opacity = 0;
 
     var adjusted_position_x = this.position_x - 40;
@@ -77,38 +80,43 @@ function lightMenuItem(name, position_x, position_y, action = null) {
     this.div.style.top = adjusted_position_y + "px";
 
     if (this.interactive) {
-        this.div.style.color = "#CCCCCC";
+        this.div.style.color = "#FFFFFF";
+        console.log("test-01");
         $(this.div).hover(function() {
-            this.selection = true;
-            $(this).stop();
-            $(this).animate({
-                color: "#FFFFFF"
-            }, 80);
+            $(this).toggleClass("menu_item_selected");
         },
         function() {
-            this.selection = false;
-            $(this).stop();
-            $(this).animate({
-                color: "#CCCCCC"
-            }, 80);
+            $(this).toggleClass("menu_item_selected");
         });
         var action = this.action;
-        $(this.div).click(function() {
-            action();
+        console.log("parent_id");
+        $(this.div).click(() => {
+            action(this.parent_id);
         });
     } else {
         this.div.style.color = "#777777";
     }
 }
 
-lightMenuItem.prototype.display = function(rate, level) {
-    // Assign the appropriate interaction animation
 
+lightMenuItem.prototype.delete = function() {
+    this.div.remove();
+}
+
+
+lightMenuItem.prototype.disable = function() {
+    $(this.div).toggleClass("menu_item_selected");
+    $(this.div).off('mouseenter mouseleave');
+}
+
+
+lightMenuItem.prototype.display = function(rate, level) {
     document.getElementById('canvas_map').appendChild(this.div);
-    // fade in the menu item
+
+    //fade in the menu item
     $('#' + this.div.id).animate({
         opacity: level
-    }, rate);
+    }, 0);
 }
 
 lightMenuItem.prototype.updatePosition = function(new_position_x, new_position_y) {
